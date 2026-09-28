@@ -63,11 +63,11 @@ export const APP_REGISTRY = {
   },
   editor: {
     id: 'editor',
-    title: 'Code Editor',
+    title: 'Text Editor',
     icon: EditorIcon,
-    defaultSize: { width: 820, height: 540 },
+    defaultSize: { width: 860, height: 560 },
     singleInstance: false,
-    component: lazy(() => import('./placeholder/ComingSoon')),
+    component: lazy(() => import('./editor/TextEditor')),
   },
   terminal: {
     id: 'terminal',
@@ -75,7 +75,7 @@ export const APP_REGISTRY = {
     icon: TerminalIcon,
     defaultSize: { width: 720, height: 460 },
     singleInstance: false,
-    component: lazy(() => import('./placeholder/ComingSoon')),
+    component: lazy(() => import('./terminal/TerminalApp')),
   },
   games: {
     id: 'games',

@@ -286,15 +286,24 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
     setDragState(null);
   };
 
-  const handleItemDoubleClick = (e, item) => {
+  const TEXT_EXTENSIONS = ['txt', 'md', 'log', 'json', 'js', 'jsx', 'ts', 'tsx', 'css', 'html', 'py', 'sh', 'yaml', 'yml', 'csv'];
+
+  const handleItemDoubleClick = async (e, item) => {
     e.stopPropagation();
     if (dragState && dragState.hasMoved) return;
 
     if (item.type === 'folder') {
       openApp('files', APP_REGISTRY.files, { initialPath: item.path });
     } else {
-      if (onNotify) {
-        onNotify(`Editor coming soon! File: ${item.name}`);
+      const ext = item.name.split('.').pop()?.toLowerCase() || '';
+      if (TEXT_EXTENSIONS.includes(ext)) {
+        // Open in TextEditor with file content
+        const content = item.content ?? '';
+        openApp('editor', APP_REGISTRY.editor, {
+          filePath: item.path,
+          fileName: item.name,
+          fileContent: content,
+        });
       } else {
         openApp('files', APP_REGISTRY.files, { initialPath: DESKTOP_PATH });
       }

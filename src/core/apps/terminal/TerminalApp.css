@@ -1,0 +1,51 @@
+.basic-term-root {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', 'Courier New', monospace;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.basic-term-output {
+  flex: 1;
+  padding: 10px 12px;
+  overflow-y: auto;
+  font-size: 13px;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.basic-line {
+  margin-bottom: 2px;
+  word-break: break-all;
+}
+
+.basic-line--command {
+  font-weight: bold;
+}
+
+.basic-input-line {
+  display: flex;
+  margin-top: 4px;
+}
+
+.basic-prompt {
+  color: #4ec9b0;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.basic-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #d4d4d4;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}

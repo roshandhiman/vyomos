@@ -6,9 +6,19 @@ export const useWindowsStore = create((set, get) => ({
   windows: [],
   focusedWindowId: null,
   maxZ: 10,
+  
+  currentDesktop: 0,
+  totalDesktops: 3,
+
+  setDesktop: (index) => set({ currentDesktop: index }),
+  addDesktop: () => set((state) => ({ totalDesktops: state.totalDesktops + 1 })),
+  removeDesktop: () => set((state) => ({ 
+    totalDesktops: Math.max(1, state.totalDesktops - 1),
+    currentDesktop: Math.min(state.currentDesktop, Math.max(0, state.totalDesktops - 2))
+  })),
 
   openApp: (appId, appManifest, props = {}) => {
-    const { windows, maxZ } = get();
+    const { windows, maxZ, currentDesktop } = get();
 
     // Check singleInstance
     if (appManifest?.singleInstance) {
@@ -50,6 +60,7 @@ export const useWindowsStore = create((set, get) => ({
       maximized: false,
       prevBounds: null,
       z: maxZ + 1,
+      desktop: currentDesktop,
       props,
     };
 

@@ -213,7 +213,17 @@ export default function Desktop() {
             if (item.type === 'folder') {
               openApp('files', APP_REGISTRY.files, { initialPath: item.path });
             } else {
-              showDesktopToast(`Editor coming soon! File: ${item.name}`);
+              const ext = item.name.split('.').pop()?.toLowerCase() || '';
+              const textExts = ['txt','md','log','json','js','jsx','ts','tsx','css','html','py','sh','yaml','yml','csv'];
+              if (textExts.includes(ext)) {
+                openApp('editor', APP_REGISTRY.editor, {
+                  filePath: item.path,
+                  fileName: item.name,
+                  fileContent: item.content ?? '',
+                });
+              } else {
+                openApp('files', APP_REGISTRY.files, { initialPath: item.path.split('/').slice(0,-1).join('/') });
+              }
             }
           },
         },

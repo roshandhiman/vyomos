@@ -6,6 +6,8 @@ export default function WindowManager() {
   const windows = useWindowsStore((state) => state.windows);
   const focusedWindowId = useWindowsStore((state) => state.focusedWindowId);
 
+  const currentDesktop = useWindowsStore((state) => state.currentDesktop);
+
   return (
     <div
       className="window-manager-layer"
@@ -17,7 +19,13 @@ export default function WindowManager() {
       }}
     >
       {windows.map((win) => (
-        <div key={win.id} style={{ pointerEvents: 'auto' }}>
+        <div 
+          key={win.id} 
+          style={{ 
+            pointerEvents: 'auto',
+            display: win.desktop === currentDesktop ? 'block' : 'none'
+          }}
+        >
           <Window windowData={win} isFocused={win.id === focusedWindowId} />
         </div>
       ))}

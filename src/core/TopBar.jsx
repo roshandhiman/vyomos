@@ -8,6 +8,12 @@ import './TopBar.css';
 export default function TopBar() {
   const focusedWindowId = useWindowsStore((state) => state.focusedWindowId);
   const windows = useWindowsStore((state) => state.windows);
+  const currentDesktop = useWindowsStore((state) => state.currentDesktop);
+  const totalDesktops = useWindowsStore((state) => state.totalDesktops);
+  const setDesktop = useWindowsStore((state) => state.setDesktop);
+  const addDesktop = useWindowsStore((state) => state.addDesktop);
+  const removeDesktop = useWindowsStore((state) => state.removeDesktop);
+
   const widgetsOpen = useWidgetsStore((state) => state.widgetsCenterOpen);
   const toggleWidgetsCenter = useWidgetsStore((state) => state.toggleWidgetsCenter);
   const setWidgetsCenterOpen = useWidgetsStore((state) => state.setWidgetsCenterOpen);
@@ -79,6 +85,24 @@ export default function TopBar() {
               <span className="topbar-separator">/</span>
               <span className="topbar-active-app">{activeTitle}</span>
             </>
+          )}
+        </div>
+
+        {/* Desktop Switcher */}
+        <div className="topbar-desktop-switcher">
+          {Array.from({ length: totalDesktops }).map((_, idx) => (
+            <button
+              key={idx}
+              className={`topbar-desktop-btn ${currentDesktop === idx ? 'topbar-desktop-btn--active' : ''}`}
+              onClick={() => setDesktop(idx)}
+              title={`Switch to Desktop ${idx + 1}`}
+            >
+              {idx + 1}
+            </button>
+          ))}
+          <button className="topbar-desktop-add" onClick={addDesktop} title="New Desktop">+</button>
+          {totalDesktops > 1 && (
+            <button className="topbar-desktop-rem" onClick={removeDesktop} title="Remove Last Desktop">-</button>
           )}
         </div>
 

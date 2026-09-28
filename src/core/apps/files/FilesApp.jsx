@@ -23,6 +23,8 @@ import {
   Info,
 } from 'lucide-react';
 import { useFsStore, vfs, normalizePath, splitPath } from '../../store/fs';
+import { useWindowsStore } from '../../store/windows';
+import { APP_REGISTRY } from '../registry';
 import { FcFolder } from 'react-icons/fc';
 import {
   MacDocTextIcon,
@@ -113,6 +115,7 @@ const formatDate = (timestamp) => {
 
 export default function FilesApp({ initialPath = '/home/user' }) {
   const revision = useFsStore((state) => state.revision);
+  const openApp = useWindowsStore((state) => state.openApp);
 
   const [currentPath, setCurrentPath] = useState(() => normalizePath(initialPath));
   const [history, setHistory] = useState([normalizePath(initialPath)]);
@@ -262,11 +265,22 @@ export default function FilesApp({ initialPath = '/home/user' }) {
     setRenamingId(null);
   };
 
+  const TEXT_EXTENSIONS = ['txt', 'md', 'log', 'json', 'js', 'jsx', 'ts', 'tsx', 'css', 'html', 'py', 'sh', 'yaml', 'yml', 'csv'];
+
   const handleItemDoubleClick = (item) => {
     if (item.type === 'folder') {
       navigateTo(item.path);
     } else {
-      showToast(`Editor coming soon! File: ${item.name}`);
+      const ext = item.name.split('.').pop()?.toLowerCase() || '';
+      if (TEXT_EXTENSIONS.includes(ext)) {
+        openApp('editor', APP_REGISTRY.editor, {
+          filePath: item.path,
+          fileName: item.name,
+          fileContent: item.content ?? '',
+        });
+      } else {
+        showToast(`No app associated with file: ${item.name}`);
+      }
     }
   };
 

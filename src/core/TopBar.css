@@ -82,3 +82,65 @@
   background: var(--bg-surface-hover);
   color: var(--accent-primary) !important;
 }
+
+.topbar-desktop-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.topbar-desktop-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.topbar-desktop-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.topbar-desktop-btn--active {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(124, 107, 245, 0.4);
+}
+
+.topbar-desktop-add, .topbar-desktop-rem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.15s ease;
+}
+
+.topbar-desktop-add:hover {
+  background: rgba(78, 201, 122, 0.2);
+  color: #4ec97a;
+}
+
+.topbar-desktop-rem:hover {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
