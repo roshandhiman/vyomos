@@ -232,15 +232,15 @@ export default function CameraApp({ minimized = false }) {
     <div className="camera-app">
       {/* Viewfinder */}
       <div className="camera-viewfinder-container">
-        {streamActive ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`camera-video camera-filter--${activeFilter}`}
-          />
-        ) : (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className={`camera-video camera-filter--${activeFilter}`}
+          style={{ display: streamActive ? 'block' : 'none' }}
+        />
+        {!streamActive && (
           <div className="camera-fallback">
             <AlertCircle size={44} color="#F59E0B" />
             <div className="camera-fallback-title">Connecting Camera...</div>
