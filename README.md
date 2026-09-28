@@ -1,10 +1,6 @@
 <div align="center">
 
-<br />
 
-<img src="public/favicon.svg" alt="Vyom OS Logo" width="80" />
-
-# Vyom OS
 
 **A browser-based desktop operating system experience built with React**
 
