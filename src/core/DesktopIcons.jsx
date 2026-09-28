@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FcFolder } from 'react-icons/fc';
+import { Globe } from 'lucide-react';
 import {
   MacDocTextIcon,
   MacDocCodeIcon,
@@ -21,6 +22,8 @@ const getDesktopIcon = (fileName, isFolder) => {
   }
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
+    case 'url':
+      return <Globe size={40} color="#60a5fa" strokeWidth={1.5} />;
     case 'js':
     case 'jsx':
     case 'ts':
@@ -319,6 +322,15 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
       openApp('files', APP_REGISTRY.files, { initialPath: item.path });
     } else {
       const ext = item.name.split('.').pop()?.toLowerCase() || '';
+      if (ext === 'url') {
+        try {
+          const data = JSON.parse(item.content);
+          if (data.url) {
+            openApp('browser', APP_REGISTRY.browser, { initialUrl: data.url });
+            return;
+          }
+        } catch (e) {}
+      }
       if (ext === 'app') {
         try {
           const data = JSON.parse(item.content);

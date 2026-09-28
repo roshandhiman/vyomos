@@ -232,7 +232,7 @@ export default function Window({ windowData, isFocused }) {
         left: 0,
         top: TOPBAR_HEIGHT,
         width: '100vw',
-        height: `calc(100vh - ${TOPBAR_HEIGHT}px - ${DOCK_RESERVE_HEIGHT}px)`,
+        height: `calc(100vh - ${TOPBAR_HEIGHT}px)`,
         zIndex: z,
       }
     : {

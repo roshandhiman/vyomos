@@ -18,6 +18,7 @@ import useGifsStore from './store/gifs';
 import DesktopGif from './gifs/DesktopGif';
 import GifPicker from './gifs/GifPicker';
 import DesktopSelection from './DesktopSelection';
+import AddWebShortcutDialog from './AddWebShortcutDialog';
 import {
   FolderPlus,
   Palette,
@@ -33,6 +34,7 @@ import {
   Settings,
   LayoutGrid,
   Film,
+  Link,
 } from 'lucide-react';
 import './Desktop.css';
 
@@ -83,6 +85,7 @@ export default function Desktop() {
   const desktopGifs = useGifsStore((s) => s.gifs);
   const addGif = useGifsStore((s) => s.addGif);
   const [gifPickerState, setGifPickerState] = useState(null);
+  const [webShortcutOpen, setWebShortcutOpen] = useState(false);
 
   // Rubber-band selection
   const desktopLayerRef = useRef(null);
@@ -155,6 +158,12 @@ export default function Desktop() {
           action: () => {
             openApp('settings', APP_REGISTRY.settings, { initialSection: 'wallpaper' });
           },
+        },
+        { separator: true },
+        {
+          label: 'Add Website Shortcut...',
+          icon: Link,
+          action: () => setWebShortcutOpen(true),
         },
       ],
     });
@@ -499,6 +508,22 @@ export default function Desktop() {
           dropY={gifPickerState?.y ?? 200}
           onSelect={(src, x, y) => addGif(src, x, y)}
           onClose={() => setGifPickerState(null)}
+        />
+
+        {/* Web Shortcut Dialog */}
+        <AddWebShortcutDialog
+          open={webShortcutOpen}
+          onClose={() => setWebShortcutOpen(false)}
+          onConfirm={async (url, siteName) => {
+            setWebShortcutOpen(false);
+            try {
+              const filename = `${siteName}.url`;
+              await vfs.writeFile(`${DESKTOP_PATH}/${filename}`, JSON.stringify({ url, name: siteName }));
+              showDesktopToast(`Shortcut "${siteName}" added to Desktop`);
+            } catch (err) {
+              showDesktopToast(err.message);
+            }
+          }}
         />
       </div>
     </GlowCursor>
