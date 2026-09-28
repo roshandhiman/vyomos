@@ -482,6 +482,80 @@ export const useFsStore = create((set, get) => ({
 
     return true;
   },
+
+  copy: async (sourcePath, targetFolderPath) => {
+    const sourceNode = get().findNodeByPath(sourcePath);
+    const targetFolder = get().findNodeByPath(targetFolderPath);
+
+    if (!sourceNode || sourceNode.id === 'root') throw new Error(`Source not found: ${sourcePath}`);
+    if (!targetFolder || targetFolder.type !== 'folder') throw new Error(`Target folder not found: ${targetFolderPath}`);
+
+    const { nodes, revision } = get();
+    const siblings = Object.values(nodes).filter((n) => n.parentId === targetFolder.id);
+    const existingNames = siblings.map((s) => s.name);
+
+    // macOS copy naming
+    const dotIndex = sourceNode.name.lastIndexOf('.');
+    const hasExt = dotIndex > 0;
+    const rawBase = hasExt ? sourceNode.name.slice(0, dotIndex) : sourceNode.name;
+    const ext = hasExt ? sourceNode.name.slice(dotIndex) : '';
+
+    let candidateName = sourceNode.parentId === targetFolder.id ? `${rawBase} copy${ext}` : sourceNode.name;
+    if (existingNames.includes(candidateName)) {
+      let counter = 2;
+      while (true) {
+        candidateName = `${rawBase} copy ${counter}${ext}`;
+        if (!existingNames.includes(candidateName)) break;
+        counter++;
+      }
+    }
+
+    const now = Date.now();
+    const newId = `${sourceNode.type}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const clonedNode = {
+      ...sourceNode,
+      id: newId,
+      name: candidateName,
+      parentId: targetFolder.id,
+      createdAt: now,
+      modifiedAt: now,
+    };
+
+    let nextNodes = { ...nodes, [newId]: clonedNode };
+
+    // If folder, recursively copy all descendants
+    if (sourceNode.type === 'folder') {
+      const copyDescendants = (oldParentId, newParentId) => {
+        const children = Object.values(nodes).filter((n) => n.parentId === oldParentId);
+        for (const child of children) {
+          const childNewId = `${child.type}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          const childClone = {
+            ...child,
+            id: childNewId,
+            parentId: newParentId,
+            createdAt: now,
+            modifiedAt: now,
+          };
+          nextNodes[childNewId] = childClone;
+          if (child.type === 'folder') {
+            copyDescendants(child.id, childNewId);
+          }
+        }
+      };
+      copyDescendants(sourceNode.id, newId);
+    }
+
+    saveVfsNodes(nextNodes);
+    set({ nodes: nextNodes, revision: revision + 1 });
+    return clonedNode;
+  },
+
+  duplicate: async (sourcePath) => {
+    const node = get().findNodeByPath(sourcePath);
+    if (!node || node.id === 'root') throw new Error(`Cannot duplicate: ${sourcePath}`);
+    const parentPath = get().getPathForNodeId(node.parentId);
+    return get().copy(sourcePath, parentPath);
+  },
 }));
 
 // Export async path-based vfs object for convenient direct use:
@@ -494,5 +568,7 @@ export const vfs = {
   rename: (path, newName) => useFsStore.getState().rename(path, newName),
   remove: (path) => useFsStore.getState().remove(path),
   move: (from, toFolder) => useFsStore.getState().move(from, toFolder),
+  copy: (from, toFolder) => useFsStore.getState().copy(from, toFolder),
+  duplicate: (path) => useFsStore.getState().duplicate(path),
   exists: (path) => useFsStore.getState().exists(path),
 };

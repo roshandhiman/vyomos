@@ -9,14 +9,20 @@ import { useSettingsStore, WALLPAPER_PRESETS } from './store/settings';
 import { useWindowsStore } from './store/windows';
 import { useFsStore, vfs } from './store/fs';
 import { DOCK_APPS, APP_REGISTRY } from './apps/registry';
+import { useClipboardStore } from './store/clipboard';
 import {
   FolderPlus,
   Palette,
   FolderOpen,
   Edit2,
   Trash2,
+  Copy,
+  Scissors,
+  Clipboard,
+  CopyPlus,
   Play,
   Info,
+  Settings,
 } from 'lucide-react';
 import './Desktop.css';
 
@@ -28,7 +34,16 @@ export default function Desktop() {
     accentPrimary,
     accentSecondary,
     cursorGlow,
+    dockSize = 52,
     dockMagnification,
+    dockMagScale = 70,
+    dockPosition = 'bottom',
+    dockAutoHide = false,
+    dockShowIndicators = true,
+    dockStyle = 'glass',
+    setDockPosition,
+    toggleDockMagnification,
+    toggleDockAutoHide,
     animations,
     performanceMode,
   } = useSettingsStore();
@@ -38,8 +53,15 @@ export default function Desktop() {
   const handleDockClick = useWindowsStore((state) => state.handleDockClick);
   const openApp = useWindowsStore((state) => state.openApp);
 
+  const clipboard = useClipboardStore((state) => state.clipboard);
+  const copyItem = useClipboardStore((state) => state.copyItem);
+  const cutItem = useClipboardStore((state) => state.cutItem);
+  const pasteItem = useClipboardStore((state) => state.pasteItem);
+  const duplicateItem = useClipboardStore((state) => state.duplicateItem);
+
   const [contextMenu, setContextMenu] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
+  const [desktopClickCount, setDesktopClickCount] = useState(0);
 
   const activeWallpaper = useMemo(() => {
     return WALLPAPER_PRESETS.find((p) => p.id === wallpaper);
@@ -79,7 +101,7 @@ export default function Desktop() {
         },
         { separator: true },
         {
-          label: 'Change Wallpaper',
+          label: 'Change Wallpaper...',
           icon: Palette,
           action: () => {
             openApp('settings', APP_REGISTRY.settings);
@@ -89,10 +111,50 @@ export default function Desktop() {
     });
   };
 
+  // Context menu on dock
+  const handleDockContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {
+          label: 'Dock Settings...',
+          icon: Settings,
+          action: () => openApp('settings', APP_REGISTRY.settings),
+        },
+        { separator: true },
+        {
+          label: 'Position: Bottom',
+          action: () => setDockPosition('bottom'),
+        },
+        {
+          label: 'Position: Left',
+          action: () => setDockPosition('left'),
+        },
+        {
+          label: 'Position: Right',
+          action: () => setDockPosition('right'),
+        },
+        { separator: true },
+        {
+          label: dockMagnification ? 'Turn Magnification Off' : 'Turn Magnification On',
+          action: () => toggleDockMagnification(),
+        },
+        {
+          label: dockAutoHide ? 'Turn Auto-Hide Off' : 'Turn Auto-Hide On',
+          action: () => toggleDockAutoHide(),
+        },
+      ],
+    });
+  };
+
   // Context menu on desktop icon
   const handleIconContextMenu = (e, item, { onRename }) => {
     e.preventDefault();
     e.stopPropagation();
+    const DESKTOP_PATH = '/home/user/Desktop';
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
@@ -113,6 +175,49 @@ export default function Desktop() {
           icon: Edit2,
           action: () => {
             if (onRename) onRename();
+          },
+        },
+        { separator: true },
+        {
+          label: 'Copy',
+          icon: Copy,
+          action: () => {
+            copyItem(item.path, item.name);
+            showDesktopToast(`Copied "${item.name}"`);
+          },
+        },
+        {
+          label: 'Cut',
+          icon: Scissors,
+          action: () => {
+            cutItem(item.path, item.name);
+            showDesktopToast(`Cut "${item.name}"`);
+          },
+        },
+        {
+          label: 'Paste',
+          icon: Clipboard,
+          disabled: !clipboard,
+          action: async () => {
+            if (!clipboard) return;
+            try {
+              const pasted = await pasteItem(DESKTOP_PATH);
+              showDesktopToast(`Pasted "${pasted?.name || 'item'}"`);
+            } catch (err) {
+              showDesktopToast(err.message);
+            }
+          },
+        },
+        {
+          label: 'Duplicate',
+          icon: CopyPlus,
+          action: async () => {
+            try {
+              const dup = await duplicateItem(item.path);
+              showDesktopToast(`Duplicated "${dup?.name || item.name}"`);
+            } catch (err) {
+              showDesktopToast(err.message);
+            }
           },
         },
         { separator: true },
@@ -145,13 +250,13 @@ export default function Desktop() {
       return {
         id: app.id,
         label: app.title,
-        icon: <Icon size={24} />,
+        icon: <Icon size={dockSize} />,
         running: isRunning,
         active: isActive,
         onClick: () => handleDockClick(app.id, app),
       };
     });
-  }, [windows, focusedWindowId, handleDockClick]);
+  }, [windows, focusedWindowId, handleDockClick, dockSize]);
 
   const isGlowActive = cursorGlow && !performanceMode;
   const isMagnificationActive = dockMagnification && !performanceMode;
@@ -181,7 +286,10 @@ export default function Desktop() {
         <div
           className="desktop-click-surface"
           onContextMenu={handleDesktopContextMenu}
-          onClick={() => setContextMenu(null)}
+          onClick={() => {
+            setContextMenu(null);
+            setDesktopClickCount((c) => c + 1);
+          }}
         />
 
         {/* Top Bar */}
@@ -191,20 +299,25 @@ export default function Desktop() {
         <DesktopIcons
           onIconContextMenu={handleIconContextMenu}
           onNotify={showDesktopToast}
+          onDesktopClick={desktopClickCount}
         />
 
         {/* Window Manager Layer */}
         <WindowManager />
 
-        {/* Dock Launcher */}
+        {/* Customizable Dock Launcher */}
         <Dock
           items={dockItems}
-          panelHeight={68}
-          baseItemSize={50}
-          magnification={isMagnificationActive ? 70 : 50}
+          baseItemSize={dockSize}
+          magnification={isMagnificationActive ? dockMagScale : dockSize}
+          position={dockPosition}
+          autoHide={dockAutoHide}
+          showIndicators={dockShowIndicators}
+          dockStyle={dockStyle}
+          onContextMenu={handleDockContextMenu}
           spring={
             animations && !performanceMode
-              ? { mass: 0.1, stiffness: 150, damping: 12 }
+              ? { mass: 0.1, stiffness: 160, damping: 14 }
               : { mass: 0.01, stiffness: 450, damping: 30 }
           }
         />

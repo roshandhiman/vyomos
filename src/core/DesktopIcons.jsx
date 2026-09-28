@@ -1,44 +1,91 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Folder, FileText, FileCode, Image as ImageIcon, File as FileIcon } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FcFolder } from 'react-icons/fc';
+import {
+  MacDocTextIcon,
+  MacDocCodeIcon,
+  MacDocImageIcon,
+} from './icons/AppIcons.js';
 import { useFsStore, vfs } from './store/fs';
 import { useWindowsStore } from './store/windows';
+import { useClipboardStore } from './store/clipboard';
 import { APP_REGISTRY } from './apps/registry';
 import './DesktopIcons.css';
 
 const DESKTOP_PATH = '/home/user/Desktop';
+const STORAGE_POS_KEY = 'vyom_desktop_positions_v1';
 
 const getDesktopIcon = (fileName, isFolder) => {
   if (isFolder) {
-    return <FcFolder size={36} />;
+    return <FcFolder size={44} style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))' }} />;
   }
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
     case 'js':
     case 'jsx':
     case 'ts':
+    case 'tsx':
     case 'json':
-      return <FileCode size={34} color="#67E8F9" />;
-    case 'md':
-    case 'txt':
-      return <FileText size={34} color="#94A3B8" />;
+    case 'html':
+    case 'css':
+    case 'py':
+      return <MacDocCodeIcon size={40} label={ext ? ext.toUpperCase().slice(0, 4) : 'JS'} />;
     case 'png':
     case 'jpg':
+    case 'jpeg':
     case 'svg':
-      return <ImageIcon size={34} color="#A78BFA" />;
+    case 'webp':
+    case 'gif':
+      return <MacDocImageIcon size={40} />;
+    case 'md':
+    case 'txt':
+    case 'log':
     default:
-      return <FileIcon size={34} color="#94A3B8" />;
+      return <MacDocTextIcon size={40} />;
   }
 };
 
-export default function DesktopIcons({ onIconContextMenu, onNotify }) {
+export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopClick }) {
   const revision = useFsStore((state) => state.revision);
   const openApp = useWindowsStore((state) => state.openApp);
+
+  const clipboard = useClipboardStore((state) => state.clipboard);
+  const copyItem = useClipboardStore((state) => state.copyItem);
+  const cutItem = useClipboardStore((state) => state.cutItem);
+  const pasteItem = useClipboardStore((state) => state.pasteItem);
+  const duplicateItem = useClipboardStore((state) => state.duplicateItem);
 
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
+
+  // Persistent icon positions: { [item.path]: { x: number, y: number } }
+  const [positions, setPositions] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const stored = localStorage.getItem(STORAGE_POS_KEY);
+        if (stored) return JSON.parse(stored);
+      } catch (err) {
+        // ignore
+      }
+    }
+    return {};
+  });
+
+  // Dragging state
+  const [dragState, setDragState] = useState(null); // { id, startX, startY, initX, initY, curX, curY, hasMoved }
+
+  // Save positions to localStorage
+  const savePositions = useCallback((newPositions) => {
+    setPositions(newPositions);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.setItem(STORAGE_POS_KEY, JSON.stringify(newPositions));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   // Fetch desktop items
   useEffect(() => {
@@ -51,41 +98,195 @@ export default function DesktopIcons({ onIconContextMenu, onNotify }) {
     };
   }, [revision]);
 
-  // Keyboard actions on desktop icons
+  // Clear selection when parent signals a desktop click
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.target.tagName === 'INPUT') return;
-      if (!selectedId) return;
+    if (onDesktopClick !== undefined) {
+      setSelectedId(null);
+    }
+  }, [onDesktopClick]);
 
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        const item = items.find((i) => i.id === selectedId);
-        if (item) {
-          vfs.remove(item.path);
-          setSelectedId(null);
+  // Compute position for an item
+  const getItemPos = useCallback(
+    (item, index) => {
+      if (dragState && dragState.id === item.id) {
+        return { x: dragState.curX, y: dragState.curY };
+      }
+      if (positions[item.path]) {
+        return positions[item.path];
+      }
+      // Default auto-grid column layout
+      const TOP_OFFSET = 44;
+      const LEFT_OFFSET = 20;
+      const ROW_HEIGHT = 96;
+      const COL_WIDTH = 96;
+      const windowH = typeof window !== 'undefined' ? window.innerHeight : 800;
+      const rowsPerCol = Math.max(1, Math.floor((windowH - 180) / ROW_HEIGHT));
+      const col = Math.floor(index / rowsPerCol);
+      const row = index % rowsPerCol;
+      return {
+        x: LEFT_OFFSET + col * COL_WIDTH,
+        y: TOP_OFFSET + row * ROW_HEIGHT,
+      };
+    },
+    [positions, dragState]
+  );
+
+  // Keyboard actions on desktop icons (Cmd+C, Cmd+V, Cmd+X, Cmd+D, Delete, Enter)
+  useEffect(() => {
+    const handleKeyDown = async (e) => {
+      if (e.target.tagName === 'INPUT') return;
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modKey = isMac ? e.metaKey : e.ctrlKey;
+
+      const selectedItem = items.find((i) => i.id === selectedId);
+
+      // Copy: Cmd/Ctrl + C
+      if (modKey && (e.key === 'c' || e.key === 'C')) {
+        if (selectedItem) {
+          e.preventDefault();
+          copyItem(selectedItem.path, selectedItem.name);
+          onNotify?.(`Copied "${selectedItem.name}" to clipboard`);
         }
-      } else if (e.key === 'F2') {
-        const item = items.find((i) => i.id === selectedId);
-        if (item) {
-          setRenamingId(item.id);
-          setRenameValue(item.name);
+      }
+
+      // Cut: Cmd/Ctrl + X
+      else if (modKey && (e.key === 'x' || e.key === 'X')) {
+        if (selectedItem) {
+          e.preventDefault();
+          cutItem(selectedItem.path, selectedItem.name);
+          onNotify?.(`Cut "${selectedItem.name}" to clipboard`);
+        }
+      }
+
+      // Paste: Cmd/Ctrl + V
+      else if (modKey && (e.key === 'v' || e.key === 'V')) {
+        if (clipboard) {
+          e.preventDefault();
+          try {
+            const pasted = await pasteItem(DESKTOP_PATH);
+            onNotify?.(`Pasted "${pasted?.name || 'item'}" on Desktop`);
+          } catch (err) {
+            onNotify?.(err.message);
+          }
+        }
+      }
+
+      // Duplicate: Cmd/Ctrl + D
+      else if (modKey && (e.key === 'd' || e.key === 'D')) {
+        if (selectedItem) {
+          e.preventDefault();
+          try {
+            const dup = await duplicateItem(selectedItem.path);
+            onNotify?.(`Duplicated "${dup?.name || selectedItem.name}"`);
+          } catch (err) {
+            onNotify?.(err.message);
+          }
+        }
+      }
+
+      // Delete: Delete or Backspace
+      else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedItem) {
+          e.preventDefault();
+          try {
+            await vfs.remove(selectedItem.path);
+            setSelectedId(null);
+            onNotify?.(`Deleted "${selectedItem.name}"`);
+          } catch (err) {
+            onNotify?.(err.message);
+          }
+        }
+      }
+
+      // Rename: F2 or Enter
+      else if (e.key === 'F2' || e.key === 'Enter') {
+        if (selectedItem && !renamingId) {
+          e.preventDefault();
+          setRenamingId(selectedItem.id);
+          setRenameValue(selectedItem.name);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [items, selectedId]);
+  }, [items, selectedId, clipboard, renamingId, copyItem, cutItem, pasteItem, duplicateItem, onNotify]);
 
-  const handleItemClick = (e, item) => {
+  // Pointer Dragging Handlers for movable desktop icons
+  const handlePointerDown = (e, item, index) => {
+    if (e.button !== 0) return; // Only left click
+    if (renamingId === item.id) return;
+
     e.stopPropagation();
     setSelectedId(item.id);
-    if (renamingId && renamingId !== item.id) {
-      setRenamingId(null);
+
+    const target = e.currentTarget;
+    try {
+      target.setPointerCapture(e.pointerId);
+    } catch (err) {
+      // ignore
     }
+
+    const curPos = getItemPos(item, index);
+    setDragState({
+      id: item.id,
+      path: item.path,
+      startX: e.clientX,
+      startY: e.clientY,
+      initX: curPos.x,
+      initY: curPos.y,
+      curX: curPos.x,
+      curY: curPos.y,
+      hasMoved: false,
+    });
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragState) return;
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+
+    if (!dragState.hasMoved && Math.hypot(dx, dy) < 4) {
+      return;
+    }
+
+    const clampedX = Math.max(10, Math.min(window.innerWidth - 90, dragState.initX + dx));
+    const clampedY = Math.max(34, Math.min(window.innerHeight - 100, dragState.initY + dy));
+
+    setDragState((prev) => ({
+      ...prev,
+      curX: clampedX,
+      curY: clampedY,
+      hasMoved: true,
+    }));
+  };
+
+  const handlePointerUp = (e) => {
+    if (!dragState) return;
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (err) {
+      // ignore
+    }
+
+    if (dragState.hasMoved) {
+      // Save new position
+      const newPos = {
+        ...positions,
+        [dragState.path]: { x: dragState.curX, y: dragState.curY },
+      };
+      savePositions(newPos);
+    }
+
+    setDragState(null);
   };
 
   const handleItemDoubleClick = (e, item) => {
     e.stopPropagation();
+    if (dragState && dragState.hasMoved) return;
+
     if (item.type === 'folder') {
       openApp('files', APP_REGISTRY.files, { initialPath: item.path });
     } else {
@@ -125,15 +326,27 @@ export default function DesktopIcons({ onIconContextMenu, onNotify }) {
 
   return (
     <div className="desktop-icons-container">
-      {items.map((item) => {
+      {items.map((item, index) => {
         const isSelected = selectedId === item.id;
         const isRenaming = renamingId === item.id;
+        const isDragging = dragState && dragState.id === item.id && dragState.hasMoved;
+        const isCut = clipboard && clipboard.action === 'cut' && clipboard.path === item.path;
+
+        const pos = getItemPos(item, index);
 
         return (
           <div
             key={item.id}
-            className={`desktop-icon-item ${isSelected ? 'desktop-icon-item--selected' : ''}`}
-            onClick={(e) => handleItemClick(e, item)}
+            className={`desktop-icon-item ${isSelected ? 'desktop-icon-item--selected' : ''} ${
+              isDragging ? 'desktop-icon-item--dragging' : ''
+            } ${isCut ? 'desktop-icon-item--cut' : ''}`}
+            style={{
+              left: `${pos.x}px`,
+              top: `${pos.y}px`,
+            }}
+            onPointerDown={(e) => handlePointerDown(e, item, index)}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
             onDoubleClick={(e) => handleItemDoubleClick(e, item)}
             onContextMenu={(e) => handleContextMenu(e, item)}
           >

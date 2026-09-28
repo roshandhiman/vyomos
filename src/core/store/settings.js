@@ -13,14 +13,14 @@ const checkLowEndDevice = () => {
 };
 
 export const ACCENT_PRESETS = [
-  { id: 'cyan-violet', name: 'Cyber Cyan', primary: '#67E8F9', secondary: '#A78BFA' },
-  { id: 'emerald-teal', name: 'Aurora Emerald', primary: '#34D399', secondary: '#38BDF8' },
-  { id: 'rose-pink', name: 'Neon Rose', primary: '#F472B6', secondary: '#A855F7' },
-  { id: 'amber-orange', name: 'Solar Amber', primary: '#FBBF24', secondary: '#F97316' },
+  { id: 'blue', name: 'Mac Blue', primary: '#007AFF', secondary: '#38BDF8' },
+  { id: 'graphite', name: 'Graphite', primary: '#71717A', secondary: '#A1A1AA' },
+  { id: 'emerald', name: 'Emerald Green', primary: '#10B981', secondary: '#34D399' },
+  { id: 'rose-pink', name: 'Neon Rose', primary: '#F43F5E', secondary: '#FB7185' },
 ];
 
 export const WALLPAPER_PRESETS = [
-  { id: 'solid-dark', name: 'Solid Dark', url: null },
+  { id: 'solid-dark', name: 'Solid Black', url: null },
   { id: 'wlp1', name: 'Nebula', url: new URL('/src/wlp/1.png', import.meta.url).href },
   { id: 'wlp2', name: 'Aurora', url: new URL('/src/wlp/2.png', import.meta.url).href },
   { id: 'wlp3', name: 'Cosmic', url: new URL('/src/wlp/3.png', import.meta.url).href },
@@ -36,14 +36,36 @@ export const WALLPAPER_PRESETS = [
 export const useSettingsStore = create(
   persist(
     (set, get) => ({
-      accentId: 'cyan-violet',
-      accentPrimary: '#67E8F9',
-      accentSecondary: '#A78BFA',
+      // Appearance
+      themeMode: 'dark', // 'dark' | 'light' | 'auto'
+      accentId: 'blue',
+      accentPrimary: '#007AFF',
+      accentSecondary: '#38BDF8',
       wallpaper: 'solid-dark',
+
+      // Effects
       cursorGlow: false,
-      dockMagnification: true,
       animations: true,
       performanceMode: false,
+
+      // Dock Customization
+      dockSize: 52, // 40 - 76
+      dockMagnification: true,
+      dockMagScale: 70, // 50 - 90
+      dockPosition: 'bottom', // 'bottom' | 'left' | 'right'
+      dockAutoHide: false,
+      dockShowIndicators: true,
+      dockStyle: 'glass', // 'glass' | 'dark' | 'transparent'
+
+      setThemeMode: (mode) => {
+        set({ themeMode: mode });
+        if (typeof document !== 'undefined') {
+          const resolved = mode === 'auto'
+            ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : mode;
+          document.documentElement.setAttribute('data-theme', resolved);
+        }
+      },
 
       setAccent: (presetId) => {
         const found = ACCENT_PRESETS.find((p) => p.id === presetId);
@@ -86,6 +108,30 @@ export const useSettingsStore = create(
         }));
       },
 
+      setDockSize: (size) => {
+        set({ dockSize: Number(size) });
+      },
+
+      setDockMagScale: (scale) => {
+        set({ dockMagScale: Number(scale) });
+      },
+
+      setDockPosition: (pos) => {
+        set({ dockPosition: pos });
+      },
+
+      toggleDockAutoHide: (val) => {
+        set((state) => ({ dockAutoHide: val !== undefined ? val : !state.dockAutoHide }));
+      },
+
+      toggleDockShowIndicators: (val) => {
+        set((state) => ({ dockShowIndicators: val !== undefined ? val : !state.dockShowIndicators }));
+      },
+
+      setDockStyle: (style) => {
+        set({ dockStyle: style });
+      },
+
       toggleAnimations: (val) => {
         set((state) => {
           const next = val !== undefined ? val : !state.animations;
@@ -125,12 +171,16 @@ export const useSettingsStore = create(
       },
     }),
     {
-      name: 'devos-settings-v3',
+      name: 'vyom-settings-v4',
       onRehydrateStorage: () => (state) => {
         if (!state || typeof document === 'undefined') return;
         // apply restored values
         document.documentElement.style.setProperty('--accent-primary', state.accentPrimary);
         document.documentElement.style.setProperty('--accent-secondary', state.accentSecondary);
+        const resolved = state.themeMode === 'auto'
+          ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : (state.themeMode || 'dark');
+        document.documentElement.setAttribute('data-theme', resolved);
         if (state.performanceMode || !state.animations) {
           document.body.classList.add('no-animations');
         } else {

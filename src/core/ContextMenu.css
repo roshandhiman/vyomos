@@ -60,3 +60,13 @@
   background-color: #EF4444;
   color: #fff;
 }
+
+.context-menu-item--disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.context-menu-item--disabled:hover {
+  background-color: transparent;
+  color: var(--text-muted);
+}

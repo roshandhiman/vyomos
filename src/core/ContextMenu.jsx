@@ -48,13 +48,15 @@ export default function ContextMenu({ menu, onClose }) {
         return (
           <button
             key={index}
-            className={`context-menu-item ${item.danger ? 'context-menu-item--danger' : ''}`}
+            className={`context-menu-item ${item.danger ? 'context-menu-item--danger' : ''} ${item.disabled ? 'context-menu-item--disabled' : ''}`}
             onClick={() => {
+              if (item.disabled) return;
               item.action();
               onClose();
             }}
+            disabled={item.disabled}
           >
-            {ItemIcon && <ItemIcon size={14} color={item.danger ? '#EF4444' : 'var(--accent-primary)'} />}
+            {ItemIcon && <ItemIcon size={14} color={item.danger ? '#EF4444' : item.disabled ? 'var(--text-dim)' : 'var(--accent-primary)'} />}
             <span>{item.label}</span>
           </button>
         );

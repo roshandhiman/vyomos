@@ -77,3 +77,8 @@
   background: var(--bg-surface-hover);
   color: var(--text-main);
 }
+
+.topbar-btn--active {
+  background: var(--bg-surface-hover);
+  color: var(--accent-primary) !important;
+}

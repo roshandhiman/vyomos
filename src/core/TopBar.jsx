@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Maximize2, Minimize2, Cpu } from 'lucide-react';
+import { Terminal, Maximize2, Minimize2, Cpu, LayoutGrid } from 'lucide-react';
 import { useWindowsStore } from './store/windows';
+import WidgetsCenter from './widgets/WidgetsCenter';
 import './TopBar.css';
 
 export default function TopBar() {
@@ -13,6 +14,7 @@ export default function TopBar() {
   const [timeStr, setTimeStr] = useState('');
   const [dateTooltip, setDateTooltip] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [widgetsOpen, setWidgetsOpen] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -60,35 +62,49 @@ export default function TopBar() {
   };
 
   return (
-    <header className="topbar">
-      <div className="topbar-left">
-        <div className="topbar-brand">
-          <span className="topbar-brand-icon">
-            <Cpu size={15} />
-          </span>
-          <span>Vyom OS</span>
+    <>
+      <header className="topbar">
+        <div className="topbar-left">
+          <div className="topbar-brand">
+            <span className="topbar-brand-icon">
+              <Cpu size={15} />
+            </span>
+            <span>Vyom OS</span>
+          </div>
+          {focusedWindow && (
+            <>
+              <span className="topbar-separator">/</span>
+              <span className="topbar-active-app">{activeTitle}</span>
+            </>
+          )}
         </div>
-        {focusedWindow && (
-          <>
-            <span className="topbar-separator">/</span>
-            <span className="topbar-active-app">{activeTitle}</span>
-          </>
-        )}
-      </div>
 
-      <div className="topbar-right">
-        <span className="topbar-clock" title={dateTooltip}>
-          {timeStr}
-        </span>
-        <button
-          className="topbar-btn"
-          onClick={toggleFullscreen}
-          title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-          aria-label="Toggle Fullscreen"
-        >
-          {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-        </button>
-      </div>
-    </header>
+        <div className="topbar-right">
+          <button
+            className={`topbar-btn topbar-btn--widgets ${widgetsOpen ? 'topbar-btn--active' : ''}`}
+            onClick={() => setWidgetsOpen((p) => !p)}
+            title="Widgets"
+            aria-label="Toggle Widgets Center"
+          >
+            <LayoutGrid size={13} />
+          </button>
+          <span className="topbar-clock" title={dateTooltip}>
+            {timeStr}
+          </span>
+          <button
+            className="topbar-btn"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+            aria-label="Toggle Fullscreen"
+          >
+            {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          </button>
+        </div>
+      </header>
+
+      {widgetsOpen && (
+        <WidgetsCenter onClose={() => setWidgetsOpen(false)} />
+      )}
+    </>
   );
 }

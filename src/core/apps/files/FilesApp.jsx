@@ -24,6 +24,11 @@ import {
 } from 'lucide-react';
 import { useFsStore, vfs, normalizePath, splitPath } from '../../store/fs';
 import { FcFolder } from 'react-icons/fc';
+import {
+  MacDocTextIcon,
+  MacDocCodeIcon,
+  MacDocImageIcon,
+} from '../../icons/AppIcons.js';
 import './FilesApp.css';
 
 const QUICK_LINKS = [
@@ -36,7 +41,7 @@ const QUICK_LINKS = [
 ];
 
 const getFileIcon = (fileName, isFolder) => {
-  if (isFolder) return <FcFolder size={32} />;
+  if (isFolder) return <FcFolder size={34} style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }} />;
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
     case 'js':
@@ -46,19 +51,20 @@ const getFileIcon = (fileName, isFolder) => {
     case 'html':
     case 'css':
     case 'json':
-      return <FileCode size={30} color="#67E8F9" />;
-    case 'md':
-    case 'txt':
-    case 'log':
-      return <FileText size={30} color="#94A3B8" />;
+    case 'py':
+      return <MacDocCodeIcon size={32} label={ext ? ext.toUpperCase().slice(0, 3) : 'JS'} />;
     case 'png':
     case 'jpg':
     case 'jpeg':
     case 'svg':
     case 'gif':
-      return <ImageIcon size={30} color="#A78BFA" />;
+    case 'webp':
+      return <MacDocImageIcon size={32} />;
+    case 'md':
+    case 'txt':
+    case 'log':
     default:
-      return <FileIcon size={30} color="#94A3B8" />;
+      return <MacDocTextIcon size={32} />;
   }
 };
 

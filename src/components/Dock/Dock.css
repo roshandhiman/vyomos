@@ -1,101 +1,178 @@
+/* ==================== DOCK WRAPPER ==================== */
 .dock-wrapper {
   position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+/* Bottom Position */
+.dock-wrapper--bottom {
   bottom: 0;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-  pointer-events: none;
-  z-index: 1000;
+}
+
+.dock-wrapper--bottom.dock-wrapper--hidden {
+  transform: translateY(calc(100% + 12px));
+  opacity: 0;
+}
+
+/* Left Position */
+.dock-wrapper--left {
+  left: 0;
+  top: var(--topbar-height);
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.dock-wrapper--left.dock-wrapper--hidden {
+  transform: translateX(calc(-100% - 12px));
+  opacity: 0;
+}
+
+/* Right Position */
+.dock-wrapper--right {
+  right: 0;
+  top: var(--topbar-height);
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.dock-wrapper--right.dock-wrapper--hidden {
+  transform: translateX(calc(100% + 12px));
+  opacity: 0;
 }
 
 .dock-outer {
-  margin: 0 0.5rem;
+  margin: 0.5rem;
   display: flex;
-  max-width: 100%;
   align-items: center;
+  justify-content: center;
   pointer-events: none;
 }
 
-.dock-panel {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+/* ==================== MACBOOK DOCK SHELF ==================== */
+.dock-shelf {
+  position: relative;
+  background-color: var(--bg-dock);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-dock);
+  pointer-events: auto;
+  user-select: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: visible;
   display: flex;
   align-items: flex-end;
-  width: fit-content;
-  gap: 0.75rem;
-  border-radius: 1.25rem;
+  justify-content: center;
+}
+
+.dock-shelf--left,
+.dock-shelf--right {
+  align-items: center;
+}
+
+/* Style variants */
+.dock-shelf--glass {
   background-color: var(--bg-dock);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-medium);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  padding: 0 0.75rem 0.6rem;
-  pointer-events: auto;
 }
 
-.dock-item {
+.dock-shelf--dark {
+  background-color: rgba(10, 10, 12, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dock-shelf--transparent {
+  background-color: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ==================== DOCK ITEM & ICONS ==================== */
+.dock-item-mac {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  box-shadow:
-    0 4px 10px rgba(0, 0, 0, 0.25),
-    0 1px 3px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  outline: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.dock-item:hover {
-  background-color: var(--bg-surface-active);
-  border-color: var(--border-accent);
-}
-
-.dock-item:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-.dock-icon {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: var(--text-main);
+  justify-content: flex-end;
+  flex-shrink: 0;
+  will-change: width, height;
 }
 
-.dock-label {
+.dock-icon-mac {
+  flex-shrink: 0;
+  transition: filter 0.15s ease;
+}
+
+/* Signature MacBook App Click Bounce */
+.dock-icon--bouncing {
+  animation: macDockBounce 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes macDockBounce {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-16px);
+  }
+  65% {
+    transform: translateY(-4px);
+  }
+  85% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Tooltip Label */
+.dock-tooltip {
   position: absolute;
-  top: -2.25rem;
-  left: 50%;
   width: fit-content;
   white-space: pre;
-  border-radius: 0.5rem;
+  border-radius: 6px;
   border: 1px solid var(--border-medium);
   background-color: var(--bg-surface);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   padding: 0.25rem 0.65rem;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 500;
   color: var(--text-main);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   pointer-events: none;
-  z-index: 10;
+  z-index: 100;
 }
 
-.dock-indicator-dot {
-  position: absolute;
-  bottom: 3px;
+.dock-tooltip--bottom {
+  top: -2.35rem;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.dock-tooltip--left {
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dock-tooltip--right {
+  right: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Running App Indicator Dot */
+.dock-dot {
+  position: absolute;
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -104,7 +181,25 @@
   transition: all 0.2s ease;
 }
 
-.dock-indicator-dot--active {
+.dock-dot--bottom {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dock-dot--left {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dock-dot--right {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dock-dot--active {
   background-color: var(--accent-primary);
   box-shadow: 0 0 6px var(--accent-primary);
   width: 5px;

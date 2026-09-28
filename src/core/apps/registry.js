@@ -1,18 +1,18 @@
 import React, { lazy } from 'react';
 import {
-  Folder,
-  Code2,
-  Terminal,
-  Globe,
-  Gamepad2,
-  Settings,
-} from 'lucide-react';
+  FilesIcon,
+  EditorIcon,
+  TerminalIcon,
+  BrowserIcon,
+  GamesIcon,
+  SettingsIcon,
+} from '../icons/AppIcons.js';
 
 export const APP_REGISTRY = {
   files: {
     id: 'files',
     title: 'Files',
-    icon: Folder,
+    icon: FilesIcon,
     defaultSize: { width: 800, height: 520 },
     singleInstance: false,
     component: lazy(() => import('./files/FilesApp')),
@@ -20,7 +20,7 @@ export const APP_REGISTRY = {
   editor: {
     id: 'editor',
     title: 'Code Editor',
-    icon: Code2,
+    icon: EditorIcon,
     defaultSize: { width: 820, height: 540 },
     singleInstance: false,
     component: lazy(() => import('./placeholder/ComingSoon')),
@@ -28,7 +28,7 @@ export const APP_REGISTRY = {
   terminal: {
     id: 'terminal',
     title: 'Terminal',
-    icon: Terminal,
+    icon: TerminalIcon,
     defaultSize: { width: 720, height: 460 },
     singleInstance: false,
     component: lazy(() => import('./placeholder/ComingSoon')),
@@ -36,7 +36,7 @@ export const APP_REGISTRY = {
   browser: {
     id: 'browser',
     title: 'Browser',
-    icon: Globe,
+    icon: BrowserIcon,
     defaultSize: { width: 840, height: 580 },
     singleInstance: false,
     component: lazy(() => import('./placeholder/ComingSoon')),
@@ -44,7 +44,7 @@ export const APP_REGISTRY = {
   games: {
     id: 'games',
     title: 'Games',
-    icon: Gamepad2,
+    icon: GamesIcon,
     defaultSize: { width: 740, height: 500 },
     singleInstance: false,
     component: lazy(() => import('./placeholder/ComingSoon')),
@@ -52,8 +52,8 @@ export const APP_REGISTRY = {
   settings: {
     id: 'settings',
     title: 'Settings',
-    icon: Settings,
-    defaultSize: { width: 660, height: 560 },
+    icon: SettingsIcon,
+    defaultSize: { width: 760, height: 560 },
     singleInstance: true,
     component: lazy(() => import('./settings/SettingsApp')),
   },

@@ -1,31 +1,29 @@
+/* Desktop Icons Container */
 .desktop-icons-container {
   position: absolute;
-  top: calc(var(--topbar-height) + 12px);
-  left: 12px;
-  bottom: calc(var(--dock-height) + 16px);
-  width: auto;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 14px;
-  z-index: 5;
+  inset: 0;
   pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
 }
 
+/* Individual Draggable Desktop Icon */
 .desktop-icon-item {
-  width: 84px;
+  position: absolute;
+  width: 86px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   padding: 8px 6px;
   border-radius: 8px;
-  cursor: pointer;
+  cursor: default;
   pointer-events: auto;
   border: 1px solid transparent;
-  transition: background-color 0.12s ease, border-color 0.12s ease;
   user-select: none;
+  touch-action: none;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+  will-change: left, top, transform;
 }
 
 .desktop-icon-item:hover {
@@ -33,24 +31,36 @@
 }
 
 .desktop-icon-item--selected {
-  background-color: rgba(103, 232, 249, 0.18) !important;
-  border-color: rgba(103, 232, 249, 0.4) !important;
-  box-shadow: 0 0 12px rgba(103, 232, 249, 0.15);
+  background-color: rgba(0, 122, 255, 0.22) !important;
+  border-color: rgba(0, 122, 255, 0.5) !important;
+  box-shadow: 0 0 10px rgba(0, 122, 255, 0.25);
+}
+
+.desktop-icon-item--dragging {
+  opacity: 0.85;
+  z-index: 100 !important;
+  cursor: grabbing !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.desktop-icon-item--cut {
+  opacity: 0.45;
 }
 
 .desktop-icon-glyph {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
 }
 
 .desktop-icon-label {
   font-size: 0.74rem;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.8);
+  color: #FFFFFF;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85);
   text-align: center;
   word-break: break-word;
   line-height: 1.25;
@@ -59,17 +69,22 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  pointer-events: none;
+  font-weight: 500;
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 
 .desktop-icon-rename-input {
-  background: rgba(18, 15, 25, 0.95);
+  background: rgba(18, 18, 20, 0.95);
   border: 1px solid var(--accent-primary);
   border-radius: 4px;
-  color: #fff;
-  font-size: 0.72rem;
+  color: #FFFFFF;
+  font-size: 0.74rem;
   padding: 2px 4px;
   text-align: center;
   width: 100%;
   outline: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  z-index: 20;
 }

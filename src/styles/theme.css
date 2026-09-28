@@ -1,42 +1,87 @@
 :root {
+  /* Default: Dark Black Theme (No purple tint, deep pure OLED black) */
+  --theme-mode: dark;
+
   /* Accents */
-  --accent-primary: #67E8F9;
-  --accent-secondary: #A78BFA;
-  --accent-glow: rgba(103, 232, 249, 0.25);
+  --accent-primary: #007AFF;
+  --accent-secondary: #38BDF8;
+  --accent-glow: rgba(0, 122, 255, 0.25);
 
   /* Backgrounds */
-  --bg-base: #0B0813;
-  --bg-surface: rgba(18, 15, 25, 0.88);
-  --bg-surface-hover: rgba(255, 255, 255, 0.06);
-  --bg-surface-active: rgba(255, 255, 255, 0.1);
-  --bg-surface-selected: rgba(103, 232, 249, 0.15);
-  --bg-window: #13101C;
-  --bg-window-titlebar: #191524;
-  --bg-topbar: rgba(14, 11, 20, 0.75);
-  --bg-dock: rgba(18, 15, 25, 0.75);
+  --bg-base: #000000;
+  --bg-desktop: #000000;
+  --bg-surface: rgba(24, 24, 27, 0.88);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
+  --bg-surface-active: rgba(255, 255, 255, 0.14);
+  --bg-surface-selected: rgba(0, 122, 255, 0.22);
+  --bg-window: #121214;
+  --bg-window-titlebar: #18181B;
+  --bg-topbar: rgba(18, 18, 20, 0.82);
+  --bg-dock: rgba(24, 24, 27, 0.72);
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.07);
 
   /* Borders */
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-medium: rgba(255, 255, 255, 0.16);
-  --border-accent: rgba(103, 232, 249, 0.35);
+  --border-accent: rgba(0, 122, 255, 0.45);
 
   /* Typography */
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
-  --text-dim: #64748B;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --text-main: #FFFFFF;
+  --text-muted: #A1A1AA;
+  --text-dim: #71717A;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-window: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border-subtle);
-  --shadow-window-focused: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-medium);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-window: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--border-subtle);
+  --shadow-window-focused: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 0 1px var(--border-medium);
+  --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.15);
 
   /* Dimensions */
   --topbar-height: 30px;
   --dock-height: 68px;
+}
 
-  /* Desktop background (solid dark, no gradients) */
-  --bg-desktop: #0B0813;
+/* Light Theme (Crisp Apple macOS Light Mode) */
+[data-theme="light"] {
+  --theme-mode: light;
+
+  /* Accents */
+  --accent-primary: #007AFF;
+  --accent-secondary: #0284C7;
+  --accent-glow: rgba(0, 122, 255, 0.2);
+
+  /* Backgrounds */
+  --bg-base: #F5F5F7;
+  --bg-desktop: #E5E5EA;
+  --bg-surface: rgba(255, 255, 255, 0.9);
+  --bg-surface-hover: rgba(0, 0, 0, 0.05);
+  --bg-surface-active: rgba(0, 0, 0, 0.09);
+  --bg-surface-selected: rgba(0, 122, 255, 0.15);
+  --bg-window: #FFFFFF;
+  --bg-window-titlebar: #F3F3F6;
+  --bg-topbar: rgba(255, 255, 255, 0.85);
+  --bg-dock: rgba(255, 255, 255, 0.65);
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --bg-card-hover: rgba(0, 0, 0, 0.06);
+
+  /* Borders */
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.15);
+  --border-accent: rgba(0, 122, 255, 0.35);
+
+  /* Typography */
+  --text-main: #1D1D1F;
+  --text-muted: #6E6E73;
+  --text-dim: #86868B;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.12);
+  --shadow-window: 0 16px 36px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-window-focused: 0 24px 50px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.14);
+  --shadow-dock: 0 20px 40px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.8);
 }
