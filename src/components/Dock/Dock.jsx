@@ -22,6 +22,8 @@ export default function Dock({
   showIndicators = true,
   dockStyle = 'glass',
   onContextMenu,
+  onAppDrop,
+  onAppDragOut,
 }) {
   const isVertical = position === 'left' || position === 'right';
   const dockRef = useRef(null);
@@ -210,6 +212,18 @@ export default function Dock({
           onMouseLeave={handleMouseLeave}
           onMouseEnter={handleMouseEnter}
           onContextMenu={onContextMenu}
+          onDragOver={(e) => {
+            if (e.dataTransfer.types.includes('application/x-devos-desktop-app')) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }
+          }}
+          onDrop={(e) => {
+            const appId = e.dataTransfer.getData('application/x-devos-desktop-app');
+            if (appId && onAppDrop) {
+              onAppDrop(appId);
+            }
+          }}
           role="toolbar"
           aria-label="Application dock"
         >
@@ -237,6 +251,17 @@ export default function Dock({
                     zIndex,
                     // overflow visible so magnified icon can bleed out
                     overflow: 'visible',
+                  }}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('application/x-devos-dock-app', item.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
+                  onDragEnd={(e) => {
+                    // If dropped outside the dock (e.g. desktop)
+                    if (e.dataTransfer.dropEffect === 'move' && onAppDragOut) {
+                      onAppDragOut(item.id);
+                    }
                   }}
                   onClick={() => handleClick(item, index)}
                   onMouseEnter={() => setHoveredIndex(index)}

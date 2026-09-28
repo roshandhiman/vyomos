@@ -51,6 +51,8 @@ export default function Desktop() {
     dockAutoHide = false,
     dockShowIndicators = true,
     dockStyle = 'glass',
+    dockApps,
+    setDockApps,
     setDockPosition,
     toggleDockMagnification,
     toggleDockAutoHide,
@@ -151,7 +153,7 @@ export default function Desktop() {
           label: 'Change Wallpaper...',
           icon: Palette,
           action: () => {
-            openApp('settings', APP_REGISTRY.settings);
+            openApp('settings', APP_REGISTRY.settings, { initialSection: 'wallpaper' });
           },
         },
       ],
@@ -169,7 +171,7 @@ export default function Desktop() {
         {
           label: 'Dock Settings...',
           icon: Settings,
-          action: () => openApp('settings', APP_REGISTRY.settings),
+          action: () => openApp('settings', APP_REGISTRY.settings, { initialSection: 'dock' }),
         },
         { separator: true },
         {
@@ -297,7 +299,9 @@ export default function Desktop() {
   // Prepare Dock Items with running and active state
   const dockItems = useMemo(() => {
     const list = [];
-    DOCK_APPS.forEach((app) => {
+    (dockApps || []).forEach((appId) => {
+      const app = APP_REGISTRY[appId];
+      if (!app) return;
       const Icon = app.icon;
       const appWindows = windows.filter((w) => w.appId === app.id);
       const isRunning = appWindows.length > 0;
@@ -352,7 +356,31 @@ export default function Desktop() {
         backgroundColor: 'var(--bg-desktop)',
       }}
     >
-      <div className="desktop-content-layer" ref={desktopLayerRef}>
+      <div
+        className="desktop-content-layer"
+        ref={desktopLayerRef}
+        onDragOver={(e) => {
+          if (e.dataTransfer.types.includes('application/x-devos-dock-app')) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+          }
+        }}
+        onDrop={async (e) => {
+          const appId = e.dataTransfer.getData('application/x-devos-dock-app');
+          if (appId) {
+            e.preventDefault();
+            const app = APP_REGISTRY[appId];
+            if (app) {
+              try {
+                await vfs.writeFile(`${DESKTOP_PATH}/${app.title}.app`, JSON.stringify({ appId }));
+                showDesktopToast(`Added ${app.title} to Desktop`);
+              } catch (err) {
+                showDesktopToast(err.message);
+              }
+            }
+          }
+        }}
+      >
         {/* Background Click Surface — marked so DesktopSelection knows it's the bare desktop */}
         <div
           className="desktop-click-surface"
@@ -361,6 +389,27 @@ export default function Desktop() {
           onClick={() => {
             setContextMenu(null);
             setDesktopClickCount((c) => c + 1);
+          }}
+          onDragOver={(e) => {
+            if (e.dataTransfer.types.includes('application/x-devos-dock-app')) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }
+          }}
+          onDrop={async (e) => {
+            const appId = e.dataTransfer.getData('application/x-devos-dock-app');
+            if (appId) {
+              e.preventDefault();
+              const app = APP_REGISTRY[appId];
+              if (app) {
+                try {
+                  await vfs.writeFile(`${DESKTOP_PATH}/${app.title}.app`, JSON.stringify({ appId }));
+                  showDesktopToast(`Added ${app.title} to Desktop`);
+                } catch (err) {
+                  showDesktopToast(err.message);
+                }
+              }
+            }
           }}
         />
 
@@ -406,6 +455,20 @@ export default function Desktop() {
           showIndicators={dockShowIndicators}
           dockStyle={dockStyle}
           onContextMenu={handleDockContextMenu}
+          onAppDrop={(appId) => {
+            // An app from the desktop was dropped onto the dock — add it
+            const currentApps = dockApps || [];
+            if (!currentApps.includes(appId)) {
+              setDockApps([...currentApps, appId]);
+              showDesktopToast(`Added ${APP_REGISTRY[appId]?.title || appId} to Dock`);
+            }
+          }}
+          onAppDragOut={(appId) => {
+            // A dock app was dragged out — remove it from dock
+            const currentApps = dockApps || [];
+            setDockApps(currentApps.filter((id) => id !== appId));
+            showDesktopToast(`Removed ${APP_REGISTRY[appId]?.title || appId} from Dock`);
+          }}
           spring={
             animations && !performanceMode
               ? { mass: 0.1, stiffness: 160, damping: 14 }

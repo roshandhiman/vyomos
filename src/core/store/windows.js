@@ -1,9 +1,12 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 let windowCounter = 0;
 
-export const useWindowsStore = create((set, get) => ({
-  windows: [],
+export const useWindowsStore = create(
+  persist(
+    (set, get) => ({
+      windows: [],
   focusedWindowId: null,
   maxZ: 10,
   
@@ -212,4 +215,4 @@ export const useWindowsStore = create((set, get) => ({
       focusWindow(topAppWindow.id);
     }
   },
-}));
+}), { name: 'devos-windows' }));

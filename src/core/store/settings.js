@@ -56,6 +56,7 @@ export const useSettingsStore = create(
       dockAutoHide: false,
       dockShowIndicators: true,
       dockStyle: 'glass', // 'glass' | 'dark' | 'transparent'
+      dockApps: ['files', 'browser', 'camera', 'photos', 'weather', 'clock', 'editor', 'terminal', 'games', 'settings'],
 
       setThemeMode: (mode) => {
         set({ themeMode: mode });
@@ -130,6 +131,10 @@ export const useSettingsStore = create(
 
       setDockStyle: (style) => {
         set({ dockStyle: style });
+      },
+
+      setDockApps: (newApps) => {
+        set({ dockApps: newApps });
       },
 
       toggleAnimations: (val) => {

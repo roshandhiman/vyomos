@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Desktop from './core/Desktop';
+import SetupScreen from './core/SetupScreen';
 import { useFsStore } from './core/store/fs';
 import { useSettingsStore } from './core/store/settings';
 
 export default function App() {
+  const [username, setUsername] = useState(() => localStorage.getItem('devos-username'));
   const initFs = useFsStore((state) => state.initFs);
   const themeMode = useSettingsStore((state) => state.themeMode);
   const accentPrimary = useSettingsStore((state) => state.accentPrimary);
@@ -52,5 +54,10 @@ export default function App() {
     }
   }, [performanceMode, animations]);
 
-  return <Desktop />;
+  return (
+    <>
+      <Desktop />
+      {!username && <SetupScreen onComplete={setUsername} />}
+    </>
+  );
 }

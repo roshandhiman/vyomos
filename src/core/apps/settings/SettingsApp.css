@@ -651,12 +651,13 @@ input:checked + .macos-slider::before {
   width: 72px;
   height: 72px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #007AFF, #00C7BE);
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
-  box-shadow: 0 10px 25px rgba(0, 122, 255, 0.4);
+  color: var(--text-main);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   margin-bottom: 0.5rem;
 }
 

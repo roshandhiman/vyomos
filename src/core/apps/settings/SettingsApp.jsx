@@ -30,8 +30,8 @@ const SECTIONS = [
   { id: 'about', label: 'General & About', icon: Info, bg: 'linear-gradient(135deg, #48484A, #1C1C1E)' },
 ];
 
-export default function SettingsApp() {
-  const [activeSection, setActiveSection] = useState('appearance');
+export default function SettingsApp({ initialSection }) {
+  const [activeSection, setActiveSection] = useState(initialSection || 'appearance');
   const [searchQuery, setSearchQuery] = useState('');
 
   const {

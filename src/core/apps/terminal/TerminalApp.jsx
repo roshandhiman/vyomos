@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { vfs } from '../../store/fs';
 import { Settings, X } from 'lucide-react';
+import CMatrix from './CMatrix';
+import Vim from './Vim';
 import './TerminalApp.css';
 
 const gifModules = import.meta.glob('../../../gifs/*.gif', { eager: true, import: 'default' });
@@ -9,21 +11,22 @@ const availableGifs = Object.entries(gifModules).map(([path, url]) => ({
   url
 }));
 
-const INITIAL_TEXT = `WELCOME user`;
-
 const DEFAULT_SETTINGS = {
   opacity: 0.95,
   bgColor: '#1e1e1e',
   fgColor: '#d4d4d4',
   fontSize: 13,
   activeGifs: [],
+  installedPackages: [],
 };
 
 // ── Draggable GIF Component ──
 function TerminalGif({ gif, onUpdate, onRemove }) {
   const [pos, setPos] = useState({ x: gif.x || 10, y: gif.y || 10 });
+  const [size, setSize] = useState({ w: gif.w || 100, h: gif.h || 100 });
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0, initX: 0, initY: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const dragRef = useRef({ startX: 0, startY: 0, initX: 0, initY: 0, initW: 0, initH: 0 });
 
   const handleMouseDown = (e) => {
     e.stopPropagation();
@@ -36,23 +39,43 @@ function TerminalGif({ gif, onUpdate, onRemove }) {
     };
   };
 
+  const handleResizeDown = (e) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initW: size.w,
+      initH: size.h,
+    };
+  };
+
   useEffect(() => {
     const handleMouseMove = (e) => {
-      if (!isDragging) return;
-      const dx = e.clientX - dragRef.current.startX;
-      const dy = e.clientY - dragRef.current.startY;
-      setPos({
-        x: dragRef.current.initX + dx,
-        y: dragRef.current.initY + dy,
-      });
+      if (isDragging) {
+        const dx = e.clientX - dragRef.current.startX;
+        const dy = e.clientY - dragRef.current.startY;
+        setPos({ x: dragRef.current.initX + dx, y: dragRef.current.initY + dy });
+      } else if (isResizing) {
+        const dx = e.clientX - dragRef.current.startX;
+        const dy = e.clientY - dragRef.current.startY;
+        setSize({ 
+          w: Math.max(50, dragRef.current.initW + dx), 
+          h: Math.max(50, dragRef.current.initH + dy) 
+        });
+      }
     };
     const handleMouseUp = () => {
       if (isDragging) {
         setIsDragging(false);
-        onUpdate({ ...gif, x: pos.x, y: pos.y });
+        onUpdate({ ...gif, x: pos.x, y: pos.y, w: size.w, h: size.h });
+      }
+      if (isResizing) {
+        setIsResizing(false);
+        onUpdate({ ...gif, x: pos.x, y: pos.y, w: size.w, h: size.h });
       }
     };
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -60,16 +83,17 @@ function TerminalGif({ gif, onUpdate, onRemove }) {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, pos, gif, onUpdate]);
+  }, [isDragging, isResizing, pos, size, gif, onUpdate]);
 
   return (
     <div
+      className="terminal-gif-container"
       style={{
         position: 'absolute',
         left: pos.x,
         top: pos.y,
-        width: 100,
-        height: 100,
+        width: size.w,
+        height: size.h,
         cursor: isDragging ? 'grabbing' : 'grab',
         zIndex: 5,
       }}
@@ -80,27 +104,35 @@ function TerminalGif({ gif, onUpdate, onRemove }) {
         alt="Terminal GIF" 
         style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} 
       />
-      <button 
-        onClick={(e) => { e.stopPropagation(); onRemove(gif.id); }}
-        style={{
-          position: 'absolute', top: -5, right: -5,
-          background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none',
-          borderRadius: '50%', width: 16, height: 16, fontSize: 10, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}
-      >
-        ×
-      </button>
+      <div className="gif-controls">
+        <button 
+          onClick={(e) => { e.stopPropagation(); onRemove(gif.id); }}
+          style={{
+            position: 'absolute', top: -5, right: -5,
+            background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none',
+            borderRadius: '50%', width: 16, height: 16, fontSize: 10, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
+        >
+          ×
+        </button>
+        <div 
+          className="terminal-gif-resize" 
+          onMouseDown={handleResizeDown} 
+        />
+      </div>
     </div>
   );
 }
 
+const getUsername = () => localStorage.getItem('devos-username') || 'user';
+
 export default function TerminalApp() {
   const [history, setHistory] = useState([
-    { id: 1, type: 'output', content: INITIAL_TEXT }
+    { id: 1, type: 'output', content: `WELCOME ${getUsername()}` }
   ]);
   const [input, setInput] = useState('');
-  const [cwd, setCwd] = useState('/home/user');
+  const [cwd, setCwd] = useState(`/home/${getUsername()}`);
   const [cmdHistory, setCmdHistory] = useState([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const bottomRef = useRef(null);
@@ -117,6 +149,8 @@ export default function TerminalApp() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [selectedGif, setSelectedGif] = useState('');
+  
+  const [runningApp, setRunningApp] = useState(null); // { name: 'cmatrix'|'vim', args: [] }
 
   useEffect(() => {
     localStorage.setItem('devos-term-settings', JSON.stringify(settings));
@@ -153,6 +187,43 @@ export default function TerminalApp() {
 
     const [cmd, ...args] = trimmed.split(' ').filter(Boolean);
 
+    // Custom installed commands
+    if (settings.installedPackages?.includes('cmatrix') && cmd === 'cmatrix') {
+      setRunningApp({ name: 'cmatrix', args });
+      return;
+    }
+
+    if (settings.installedPackages?.includes('neofetch') && cmd === 'neofetch') {
+      const art = `
+    \\\\  //    \x1b[36mOS:\x1b[0m Vyom OS (Web)
+     \\\\//     \x1b[36mHost:\x1b[0m Browser
+      ||      \x1b[36mKernel:\x1b[0m 1.0.0-react
+      ||      \x1b[36mPackages:\x1b[0m ${(settings.installedPackages || []).length} (apt)
+      ||      \x1b[36mShell:\x1b[0m vsh 1.0
+              \x1b[36mTerminal:\x1b[0m VyomTerm
+      `;
+      print(art);
+      return;
+    }
+
+    if (settings.installedPackages?.includes('cowsay') && cmd === 'cowsay') {
+      const text = args.join(' ') || 'Moo!';
+      const border = '-'.repeat(text.length + 2);
+      const cow = `
+ ${border}
+< ${text} >
+ ${border}
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||
+      `;
+      print(cow);
+      return;
+    }
+
+    // Built-in commands
     switch (cmd.toLowerCase()) {
       case 'help':
         print('Available commands:');
@@ -168,6 +239,49 @@ export default function TerminalApp() {
         print('  touch    - Create an empty file');
         print('  rm       - Remove a file or directory');
         print('  cat      - Read a file');
+        print('  apt      - Package manager (try: apt install neofetch)');
+        break;
+      case 'apt':
+        if (args[0] === 'install') {
+          const pkg = args[1];
+          if (!pkg) { 
+            print('apt: missing package name', 'error'); 
+            break; 
+          }
+          const available = ['cmatrix', 'neofetch', 'cowsay', 'vim'];
+          if (!available.includes(pkg)) {
+            print(`E: Unable to locate package ${pkg}`, 'error');
+            break;
+          }
+          if (settings.installedPackages?.includes(pkg)) {
+            print(`Reading package lists... Done`);
+            print(`Building dependency tree... Done`);
+            print(`${pkg} is already the newest version (1.0.0).`);
+            print(`0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.`);
+            break;
+          }
+          print(`Reading package lists... Done`);
+          print(`Building dependency tree... Done`);
+          print(`The following NEW packages will be installed:`);
+          print(`  ${pkg}`);
+          print(`0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.`);
+          print(`Get:1 http://vyomos.archive.org ${pkg} [1.0.0]`);
+          print(`Unpacking ${pkg} (1.0.0) ...`);
+          print(`Setting up ${pkg} (1.0.0) ...`);
+          setSettings({ ...settings, installedPackages: [...(settings.installedPackages || []), pkg] });
+        } else if (args[0] === 'list') {
+          print('Available packages: cmatrix, neofetch, cowsay, vim');
+          print(`Installed: ${(settings.installedPackages || []).join(', ')}`);
+        } else {
+          print('Usage: apt install <package>');
+        }
+        break;
+      case 'vim':
+        if (settings.installedPackages?.includes('vim')) {
+          setRunningApp({ name: 'vim', args });
+        } else {
+          print('Command not found: vim. Try: apt install vim', 'error');
+        }
         break;
       case 'clear':
         setHistory([]);
@@ -176,7 +290,7 @@ export default function TerminalApp() {
         print(cwd);
         break;
       case 'whoami':
-        print('user');
+        print(getUsername());
         break;
       case 'date':
         print(new Date().toString());
@@ -198,7 +312,7 @@ export default function TerminalApp() {
         break;
       case 'cd':
         try {
-          const searchPath = getAbsPath(args[0] || '/home/user');
+          const searchPath = getAbsPath(args[0] || `/home/${getUsername()}`);
           await vfs.list(searchPath); 
           setCwd(searchPath);
         } catch (e) {
@@ -239,7 +353,12 @@ export default function TerminalApp() {
         }
         break;
       default:
-        print(`Command not found: ${cmd}`, 'error');
+        const available = ['cmatrix', 'neofetch', 'cowsay', 'vim'];
+        if (available.includes(cmd) && !settings.installedPackages?.includes(cmd)) {
+          print(`Command '${cmd}' not found, but can be installed with:\napt install ${cmd}`);
+        } else {
+          print(`vsh: ${cmd}: command not found`, 'error');
+        }
     }
   };
 
@@ -279,6 +398,16 @@ export default function TerminalApp() {
         if (!showSettings) inputRef.current?.focus();
       }}
     >
+      {/* Running Sub-Apps (CMatrix, Vim) */}
+      {runningApp?.name === 'cmatrix' && <CMatrix onExit={() => setRunningApp(null)} />}
+      {runningApp?.name === 'vim' && (
+        <Vim 
+          filepath={runningApp.args[0] ? getAbsPath(runningApp.args[0]) : null} 
+          cwd={cwd} 
+          onExit={() => setRunningApp(null)} 
+        />
+      )}
+
       {/* Draggable GIFs */}
       {(settings.activeGifs || []).map(gif => (
         <TerminalGif 
@@ -301,11 +430,18 @@ export default function TerminalApp() {
 
       {/* Terminal Output */}
       <div className="basic-term-output">
-        {history.map((line) => (
-          <div key={line.id} className={`basic-line basic-line--${line.type}`}>
-            {line.content}
-          </div>
-        ))}
+        {history.map((line) => {
+          if (line.type === 'html') {
+            return (
+              <div key={line.id} className="basic-line" dangerouslySetInnerHTML={{ __html: line.content }} />
+            );
+          }
+          return (
+            <div key={line.id} className={`basic-line basic-line--${line.type}`}>
+              {line.content}
+            </div>
+          );
+        })}
         
         {/* Active Input Line */}
         <div className="basic-input-line">
@@ -405,7 +541,7 @@ export default function TerminalApp() {
                         ...settings,
                         activeGifs: [
                           ...(settings.activeGifs || []), 
-                          { id: Date.now(), url: selectedGif, x: 20, y: 20 }
+                          { id: Date.now(), url: selectedGif, x: 20, y: 20, w: 100, h: 100 }
                         ]
                       });
                       setSelectedGif('');
@@ -415,6 +551,9 @@ export default function TerminalApp() {
                   Add
                 </button>
               </div>
+              {selectedGif && (
+                <img src={selectedGif} alt="Preview" className="term-settings-preview" />
+              )}
             </div>
 
           </div>

@@ -286,6 +286,29 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
     setDragState(null);
   };
 
+  const handleDragOver = (e) => {
+    if (e.dataTransfer.types.includes('application/x-devos-dock-app')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  };
+
+  const handleDrop = async (e) => {
+    const appId = e.dataTransfer.getData('application/x-devos-dock-app');
+    if (appId) {
+      e.preventDefault();
+      const app = APP_REGISTRY[appId];
+      if (app) {
+        try {
+          await vfs.writeFile(`${DESKTOP_PATH}/${app.title}.app`, JSON.stringify({ appId }));
+          onNotify?.(`Added ${app.title} to Desktop`);
+        } catch (err) {
+          onNotify?.(err.message);
+        }
+      }
+    }
+  };
+
   const TEXT_EXTENSIONS = ['txt', 'md', 'log', 'json', 'js', 'jsx', 'ts', 'tsx', 'css', 'html', 'py', 'sh', 'yaml', 'yml', 'csv'];
 
   const handleItemDoubleClick = async (e, item) => {
@@ -296,6 +319,17 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
       openApp('files', APP_REGISTRY.files, { initialPath: item.path });
     } else {
       const ext = item.name.split('.').pop()?.toLowerCase() || '';
+      if (ext === 'app') {
+        try {
+          const data = JSON.parse(item.content);
+          if (data.appId && APP_REGISTRY[data.appId]) {
+            openApp(data.appId, APP_REGISTRY[data.appId]);
+            return;
+          }
+        } catch (e) {
+          // fallback
+        }
+      }
       if (TEXT_EXTENSIONS.includes(ext)) {
         // Open in TextEditor with file content
         const content = item.content ?? '';
@@ -337,7 +371,11 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
   };
 
   return (
-    <div className="desktop-icons-container">
+    <div 
+      className="desktop-icons-container"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {items.map((item, index) => {
         const isSelected =
           selectedId === item.id ||
@@ -364,6 +402,18 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
             onPointerUp={handlePointerUp}
             onDoubleClick={(e) => handleItemDoubleClick(e, item)}
             onContextMenu={(e) => handleContextMenu(e, item)}
+            draggable={item.name.endsWith('.app')}
+            onDragStart={(e) => {
+              if (item.name.endsWith('.app')) {
+                try {
+                  const data = JSON.parse(item.content);
+                  if (data.appId) {
+                    e.dataTransfer.setData('application/x-devos-desktop-app', data.appId);
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }
+                } catch(err) {}
+              }
+            }}
           >
             <div className="desktop-icon-glyph">
               {getDesktopIcon(item.name, item.type === 'folder')}
