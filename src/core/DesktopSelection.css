@@ -1,0 +1,21 @@
+/* macOS-style rubber-band / marquee selection rectangle */
+.desktop-selection-rect {
+  position: fixed;
+  pointer-events: none;
+  z-index: 4000;
+
+  /* The classic macOS blue tint */
+  background: rgba(0, 102, 255, 0.12);
+  border: 1.5px solid rgba(0, 120, 255, 0.7);
+
+  /* Slight blur on the fill for the "frosted" look */
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+
+  border-radius: 3px;
+
+  /* Glow around the border edge */
+  box-shadow:
+    0 0 0 0.5px rgba(0, 100, 255, 0.15),
+    inset 0 0 12px rgba(0, 120, 255, 0.06);
+}

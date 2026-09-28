@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import GlowCursor from '../components/GlowCursor/GlowCursor';
 import Dock from '../components/Dock/Dock';
 import TopBar from './TopBar';
@@ -17,6 +17,7 @@ import { LaunchpadIcon } from './icons/AppIcons';
 import useGifsStore from './store/gifs';
 import DesktopGif from './gifs/DesktopGif';
 import GifPicker from './gifs/GifPicker';
+import DesktopSelection from './DesktopSelection';
 import {
   FolderPlus,
   Palette,
@@ -79,7 +80,11 @@ export default function Desktop() {
   // GIF system
   const desktopGifs = useGifsStore((s) => s.gifs);
   const addGif = useGifsStore((s) => s.addGif);
-  const [gifPickerState, setGifPickerState] = useState(null); // { x, y } or null
+  const [gifPickerState, setGifPickerState] = useState(null);
+
+  // Rubber-band selection
+  const desktopLayerRef = useRef(null);
+  const [selectionRect, setSelectionRect] = useState(null);
 
   const activeWallpaper = useMemo(() => {
     return WALLPAPER_PRESETS.find((p) => p.id === wallpaper);
@@ -337,10 +342,11 @@ export default function Desktop() {
         backgroundColor: 'var(--bg-desktop)',
       }}
     >
-      <div className="desktop-content-layer">
-        {/* Background Click Surface for Deselecting & Desktop Context Menu */}
+      <div className="desktop-content-layer" ref={desktopLayerRef}>
+        {/* Background Click Surface — marked so DesktopSelection knows it's the bare desktop */}
         <div
           className="desktop-click-surface"
+          data-desktop-surface="true"
           onContextMenu={handleDesktopContextMenu}
           onClick={() => {
             setContextMenu(null);
@@ -351,21 +357,30 @@ export default function Desktop() {
         {/* Top Bar */}
         <TopBar />
 
+
+        {/* Desktop GIFs Layer — behind EVERYTHING, renders before icons/widgets/windows */}
+        {desktopGifs.map((g) => (
+          <DesktopGif key={g.id} gif={g} />
+        ))}
+
         {/* Desktop Icons (/home/user/Desktop) */}
         <DesktopIcons
           onIconContextMenu={handleIconContextMenu}
           onNotify={showDesktopToast}
           onDesktopClick={desktopClickCount}
+          selectionRect={selectionRect}
+        />
+
+        {/* Rubber-band selection rectangle */}
+        <DesktopSelection
+          containerRef={desktopLayerRef}
+          onSelect={setSelectionRect}
+          onClear={() => setSelectionRect(null)}
         />
 
         {/* Desktop Widgets Layer */}
         {desktopWidgets.map((w) => (
           <DesktopWidget key={w.id} widget={w} />
-        ))}
-
-        {/* Desktop GIFs Layer */}
-        {desktopGifs.map((g) => (
-          <DesktopGif key={g.id} gif={g} />
         ))}
 
         {/* Window Manager Layer */}

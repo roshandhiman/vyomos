@@ -196,6 +196,7 @@ export default function BrowserApp() {
           title={activeTab.title}
           className="browser-iframe"
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+          allow="camera 'none'; microphone 'none'; geolocation 'none'"
         />
 
         {/* Helpful frame tip */}

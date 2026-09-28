@@ -55,11 +55,20 @@ export default function CameraApp({ minimized = false }) {
     }
   };
 
-  // Stop camera tracks and release hardware
+  // Tracks whether the component is still mounted — prevents the async race
+  // where getUserMedia resolves AFTER unmount and leaves the LED on.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Stop camera tracks and release hardware (synchronous, safe to call anytime)
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      const tracks = streamRef.current.getTracks();
-      tracks.forEach((track) => {
+      streamRef.current.getTracks().forEach((track) => {
         track.stop();
         track.enabled = false;
       });
@@ -71,21 +80,25 @@ export default function CameraApp({ minimized = false }) {
     setStreamActive(false);
   }, []);
 
-  // Start webcam
+  // Start webcam — race-condition safe
   const startCamera = useCallback(async () => {
     try {
       setPermissionError(null);
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('Camera API is not supported in this browser.');
       }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user',
-        },
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
         audio: false,
       });
+
+      // If the component unmounted while getUserMedia was pending, kill the
+      // stream immediately — this is what keeps the green LED from staying on.
+      if (!mountedRef.current) {
+        stream.getTracks().forEach((t) => { t.stop(); t.enabled = false; });
+        return;
+      }
 
       streamRef.current = stream;
       if (videoRef.current) {
@@ -93,13 +106,15 @@ export default function CameraApp({ minimized = false }) {
       }
       setStreamActive(true);
     } catch (err) {
+      if (!mountedRef.current) return; // already gone, ignore
       console.warn('Camera access issue:', err);
       setPermissionError(err.message || 'Camera permission denied or camera not found.');
       setStreamActive(false);
     }
   }, []);
 
-  // Camera lifecycle: start when visible, stop when minimized or closed
+  // Single camera lifecycle effect: start/stop based on minimized prop.
+  // Cleanup runs on unmount (window close) AND whenever minimized changes to true.
   useEffect(() => {
     if (minimized) {
       stopCamera();
@@ -107,18 +122,18 @@ export default function CameraApp({ minimized = false }) {
       startCamera();
     }
     return () => {
+      // This fires when the window is closed (component unmounts).
+      // If startCamera is still mid-await, mountedRef.current = false will
+      // cause it to stop the stream the moment getUserMedia resolves.
       stopCamera();
     };
   }, [minimized, startCamera, stopCamera]);
 
-  // Release camera on tab/window close
+  // Extra safety: release camera if the browser tab/page is closed
   useEffect(() => {
     const handleUnload = () => stopCamera();
     window.addEventListener('beforeunload', handleUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleUnload);
-      stopCamera();
-    };
+    return () => window.removeEventListener('beforeunload', handleUnload);
   }, [stopCamera]);
 
   // Fetch recent photos from VFS Pictures folder

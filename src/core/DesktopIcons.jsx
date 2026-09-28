@@ -9,6 +9,7 @@ import { useFsStore, vfs } from './store/fs';
 import { useWindowsStore } from './store/windows';
 import { useClipboardStore } from './store/clipboard';
 import { APP_REGISTRY } from './apps/registry';
+import { iconIntersectsSelection } from './DesktopSelection';
 import './DesktopIcons.css';
 
 const DESKTOP_PATH = '/home/user/Desktop';
@@ -44,7 +45,7 @@ const getDesktopIcon = (fileName, isFolder) => {
   }
 };
 
-export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopClick }) {
+export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopClick, selectionRect }) {
   const revision = useFsStore((state) => state.revision);
   const openApp = useWindowsStore((state) => state.openApp);
 
@@ -72,8 +73,10 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
     return {};
   });
 
-  // Dragging state
-  const [dragState, setDragState] = useState(null); // { id, startX, startY, initX, initY, curX, curY, hasMoved }
+  const [dragState, setDragState] = useState(null);
+
+  // Refs for each icon element — needed to check intersection with selection rect
+  const iconEls = useRef({});
 
   // Save positions to localStorage
   const savePositions = useCallback((newPositions) => {
@@ -327,7 +330,9 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
   return (
     <div className="desktop-icons-container">
       {items.map((item, index) => {
-        const isSelected = selectedId === item.id;
+        const isSelected =
+          selectedId === item.id ||
+          (!!selectionRect && iconIntersectsSelection(iconEls.current[item.id], selectionRect));
         const isRenaming = renamingId === item.id;
         const isDragging = dragState && dragState.id === item.id && dragState.hasMoved;
         const isCut = clipboard && clipboard.action === 'cut' && clipboard.path === item.path;
@@ -337,6 +342,7 @@ export default function DesktopIcons({ onIconContextMenu, onNotify, onDesktopCli
         return (
           <div
             key={item.id}
+            ref={(el) => { iconEls.current[item.id] = el; }}
             className={`desktop-icon-item ${isSelected ? 'desktop-icon-item--selected' : ''} ${
               isDragging ? 'desktop-icon-item--dragging' : ''
             } ${isCut ? 'desktop-icon-item--cut' : ''}`}

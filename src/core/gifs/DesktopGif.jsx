@@ -111,7 +111,9 @@ export default function DesktopGif({ gif }) {
           top: gif.y,
           width: gif.width,
           height: gif.height,
-          zIndex: gif.zIndex ?? 500,
+          // Always clamp to max 20 — GIFs must stay behind icons, widgets & windows
+          // even if old localStorage data has a high value.
+          zIndex: Math.min(gif.zIndex ?? 5, 20),
         }}
         onMouseDown={onDragMouseDown}
         onContextMenu={handleContextMenu}
@@ -145,12 +147,6 @@ export default function DesktopGif({ gif }) {
             onClick={() => { removeGif(gif.id); setContextMenu(null); }}
           >
             🗑 Remove GIF
-          </button>
-          <button
-            className="desktop-gif-menu-item"
-            onClick={() => { bringToFront(gif.id); setContextMenu(null); }}
-          >
-            ↑ Bring to Front
           </button>
         </div>
       )}
