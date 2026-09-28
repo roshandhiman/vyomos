@@ -1,19 +1,31 @@
 .basic-term-root {
+  position: relative;
   display: flex;
   height: 100%;
   width: 100%;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
   font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', 'Courier New', monospace;
   overflow: hidden;
   box-sizing: border-box;
 }
 
+/* GIF Background */
+.basic-term-bg-gif {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Output layer */
 .basic-term-output {
+  position: relative;
+  z-index: 1;
   flex: 1;
   padding: 10px 12px;
   overflow-y: auto;
-  font-size: 13px;
   white-space: pre-wrap;
   line-height: 1.4;
   scrollbar-width: thin;
@@ -27,6 +39,10 @@
 
 .basic-line--command {
   font-weight: bold;
+}
+
+.basic-line--error {
+  color: #f87171;
 }
 
 .basic-input-line {
@@ -44,8 +60,155 @@
   flex: 1;
   background: transparent;
   border: none;
-  color: #d4d4d4;
   font-family: inherit;
-  font-size: inherit;
   outline: none;
+}
+
+/* Settings Button */
+.term-settings-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  z-index: 10;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.term-settings-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Settings Panel */
+.term-settings-panel {
+  position: absolute;
+  top: 40px;
+  right: 15px;
+  width: 260px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #d4d4d4;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.term-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.term-settings-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+}
+.term-settings-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.term-settings-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.term-settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.term-settings-row label {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.term-settings-row input[type="range"] {
+  width: 100%;
+}
+
+.term-settings-row input[type="color"] {
+  width: 100%;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.term-settings-textinput {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #fff;
+  font-size: 0.75rem;
+  box-sizing: border-box;
+}
+
+.term-settings-divider {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Draggable GIF Hover Controls */
+.terminal-gif-container .gif-controls {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.terminal-gif-container:hover .gif-controls {
+  opacity: 1;
+}
+
+.terminal-gif-resize {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  background: rgba(124, 107, 245, 0.8);
+  border-radius: 50%;
+  cursor: nwse-resize;
+  z-index: 10;
+}
+
+.term-settings-preview {
+  width: 100%;
+  height: 80px;
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 8px;
 }
