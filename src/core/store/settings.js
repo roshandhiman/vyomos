@@ -32,16 +32,29 @@ export const WALLPAPER_PRESETS = [
   { id: 'wlp9', name: 'Twilight', url: new URL('/src/wlp/9.jpg', import.meta.url).href },
   { id: 'wlp10', name: 'Abyss', url: new URL('/src/wlp/10.jpg', import.meta.url).href },
 ];
+export const LIVE_WALLPAPERS = [
+  { id: 'alpine', name: 'Alpine Waterfall', url: new URL('/src/livewlp/alpine-waterfall.1920x1080.mp4', import.meta.url).href },
+  { id: 'booty-bay', name: 'Booty Bay Paradise', url: new URL('/src/livewlp/booty-bay-paradise-wow.1920x1080.mp4', import.meta.url).href },
+  { id: 'windmills', name: 'Evening Drive', url: new URL('/src/livewlp/evening-drive-and-windmills.1920x1080.mp4', import.meta.url).href },
+  { id: 'tram', name: 'Midnight Tram', url: new URL('/src/livewlp/midnight-tram.1920x1080.mp4', import.meta.url).href },
+  { id: 'train', name: 'Sunset Train', url: new URL('/src/livewlp/orange-train-at-sunset.1920x1080.mp4', import.meta.url).href },
+  { id: 'pixel-winter', name: 'Pixel Winter', url: new URL('/src/livewlp/pixel-winter-evening.1920x1080.mp4', import.meta.url).href },
+  { id: 'spring', name: 'Spring Meadow', url: new URL('/src/livewlp/spring-meadow.1920x1080.mp4', import.meta.url).href },
+  { id: 'stormlight', name: 'Stormlight', url: new URL('/src/livewlp/stormlight-over-fields.1920x1080.mp4', import.meta.url).href },
+];
 
 export const useSettingsStore = create(
   persist(
     (set, get) => ({
       // Appearance
+      userName: 'Roshan',
       themeMode: 'dark', // 'dark' | 'light' | 'auto'
       accentId: 'blue',
       accentPrimary: '#007AFF',
       accentSecondary: '#38BDF8',
-      wallpaper: 'solid-dark',
+      wallpaper: 'wlp1',
+      liveWallpaper: null,
+      isFirstTime: true,
 
       // Effects
       cursorGlow: false,
@@ -96,7 +109,19 @@ export const useSettingsStore = create(
       },
 
       setWallpaper: (wallpaperId) => {
-        set({ wallpaper: wallpaperId });
+        set({ wallpaper: wallpaperId, liveWallpaper: null });
+      },
+
+      setLiveWallpaper: (wallpaperId) => {
+        set({ liveWallpaper: wallpaperId, wallpaper: null });
+      },
+
+      setUserName: (name) => {
+        set({ userName: name });
+      },
+
+      setFirstTimeComplete: () => {
+        set({ isFirstTime: false });
       },
 
       toggleCursorGlow: (val) => {

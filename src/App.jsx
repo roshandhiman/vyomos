@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Desktop from './core/Desktop';
-import SetupScreen from './core/SetupScreen';
+import SetupWizard from './core/SetupWizard';
 import { useFsStore } from './core/store/fs';
 import { useSettingsStore } from './core/store/settings';
 
 export default function App() {
-  const [username, setUsername] = useState(() => localStorage.getItem('devos-username'));
+  const isFirstTime = useSettingsStore((state) => state.isFirstTime);
   const initFs = useFsStore((state) => state.initFs);
   const themeMode = useSettingsStore((state) => state.themeMode);
   const accentPrimary = useSettingsStore((state) => state.accentPrimary);
@@ -57,7 +57,7 @@ export default function App() {
   return (
     <>
       <Desktop />
-      {!username && <SetupScreen onComplete={setUsername} />}
+      {isFirstTime && <SetupWizard />}
     </>
   );
 }

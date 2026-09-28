@@ -5,7 +5,7 @@ import TopBar from './TopBar';
 import DesktopIcons from './DesktopIcons';
 import WindowManager from './WindowManager';
 import ContextMenu from './ContextMenu';
-import { useSettingsStore, WALLPAPER_PRESETS } from './store/settings';
+import { useSettingsStore, WALLPAPER_PRESETS, LIVE_WALLPAPERS } from './store/settings';
 import { useWindowsStore } from './store/windows';
 import { useFsStore, vfs } from './store/fs';
 import { DOCK_APPS, APP_REGISTRY } from './apps/registry';
@@ -43,6 +43,7 @@ const DESKTOP_PATH = '/home/user/Desktop';
 export default function Desktop() {
   const {
     wallpaper,
+    liveWallpaper,
     accentPrimary,
     accentSecondary,
     cursorGlow,
@@ -94,6 +95,10 @@ export default function Desktop() {
   const activeWallpaper = useMemo(() => {
     return WALLPAPER_PRESETS.find((p) => p.id === wallpaper);
   }, [wallpaper]);
+
+  const activeLiveWallpaper = useMemo(() => {
+    return LIVE_WALLPAPERS.find((p) => p.id === liveWallpaper);
+  }, [liveWallpaper]);
 
   const showDesktopToast = useCallback((msg) => {
     setToastMsg(msg);
@@ -365,6 +370,17 @@ export default function Desktop() {
         backgroundColor: 'var(--bg-desktop)',
       }}
     >
+      {activeLiveWallpaper && (
+        <video 
+          key={activeLiveWallpaper.id}
+          src={activeLiveWallpaper.url} 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="desktop-live-wallpaper"
+        />
+      )}
       <div
         className="desktop-content-layer"
         ref={desktopLayerRef}

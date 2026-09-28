@@ -9,26 +9,7 @@ const getDefaultWidgets = () => {
   // Place on right side of desktop by default
   const rightX = Math.max(20, width - 330);
 
-  return [
-    {
-      id: 'widget-weather-default',
-      type: 'weather',
-      x: rightX,
-      y: 44,
-    },
-    {
-      id: 'widget-clock-default',
-      type: 'clock',
-      x: rightX,
-      y: 226,
-    },
-    {
-      id: 'widget-notes-default',
-      type: 'notes',
-      x: rightX,
-      y: 396,
-    },
-  ];
+  return [];
 };
 
 const loadSavedWidgets = () => {

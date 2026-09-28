@@ -3,6 +3,7 @@ import {
   useSettingsStore,
   ACCENT_PRESETS,
   WALLPAPER_PRESETS,
+  LIVE_WALLPAPERS,
 } from '../../store/settings';
 import { useFsStore } from '../../store/fs';
 import {
@@ -38,6 +39,7 @@ export default function SettingsApp({ initialSection }) {
     themeMode,
     accentId,
     wallpaper,
+    liveWallpaper,
     cursorGlow,
     dockSize,
     dockMagnification,
@@ -51,6 +53,7 @@ export default function SettingsApp({ initialSection }) {
     setThemeMode,
     setAccent,
     setWallpaper,
+    setLiveWallpaper,
     setDockSize,
     toggleDockMagnification,
     setDockMagScale,
@@ -67,8 +70,11 @@ export default function SettingsApp({ initialSection }) {
   const initFs = useFsStore((state) => state.initFs);
 
   const activeWallpaper = useMemo(() => {
+    if (liveWallpaper) {
+      return LIVE_WALLPAPERS.find((p) => p.id === liveWallpaper) || WALLPAPER_PRESETS[0];
+    }
     return WALLPAPER_PRESETS.find((p) => p.id === wallpaper) || WALLPAPER_PRESETS[0];
-  }, [wallpaper]);
+  }, [wallpaper, liveWallpaper]);
 
   const fsStats = useMemo(() => {
     const all = Object.values(fsNodes || {});
@@ -404,14 +410,26 @@ export default function SettingsApp({ initialSection }) {
             </div>
 
             {/* Current Active Banner */}
-            <div
-              className="wallpaper-banner"
-              style={{
-                backgroundImage: activeWallpaper.url ? `url("${activeWallpaper.url}")` : undefined,
-                backgroundColor: 'var(--bg-desktop)',
-              }}
-            >
-              <div className="wallpaper-banner-overlay" />
+              <div
+                className="wallpaper-banner"
+                style={{
+                  ...(liveWallpaper ? {} : {
+                    backgroundImage: activeWallpaper.url ? `url("${activeWallpaper.url}")` : undefined,
+                    backgroundColor: 'var(--bg-desktop)',
+                  })
+                }}
+              >
+                {liveWallpaper && (
+                  <video 
+                    src={activeWallpaper.url} 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
+                  />
+                )}
+                <div className="wallpaper-banner-overlay" />
               <div className="wallpaper-banner-text">
                 <h4>{activeWallpaper.name}</h4>
                 <p>Currently applied wallpaper</p>
@@ -434,6 +452,29 @@ export default function SettingsApp({ initialSection }) {
                       onClick={() => setWallpaper(p.id)}
                     >
                       <span className="wallpaper-thumb-name">{p.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="macos-content-header" style={{ marginTop: '24px' }}>
+              <h3 className="macos-content-title" style={{ fontSize: '1.2rem' }}>Live Wallpapers</h3>
+            </div>
+            
+            <div className="macos-group">
+              <div className="wallpaper-grid-macos">
+                {LIVE_WALLPAPERS.map((p) => {
+                  const isSel = liveWallpaper === p.id;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`wallpaper-thumb-card ${isSel ? 'wallpaper-thumb-card--active' : ''}`}
+                      onClick={() => setLiveWallpaper(p.id)}
+                      style={{ position: 'relative', overflow: 'hidden', padding: 0 }}
+                    >
+                      <video src={p.url} autoPlay loop muted playsInline style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <span className="wallpaper-thumb-name" style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: '4px' }}>{p.name}</span>
                     </div>
                   );
                 })}

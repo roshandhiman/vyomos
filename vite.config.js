@@ -74,8 +74,59 @@ function proxyMiddleware() {
             proxyRes.on('data', (chunk) => (body += chunk));
             proxyRes.on('end', () => {
               const origin = `${parsedUrl.protocol}//${parsedUrl.host}`;
+              const injectScript = `
+                <script>
+                  window.addEventListener('DOMContentLoaded', () => {
+                    document.body.addEventListener('click', (e) => {
+                      const a = e.target.closest('a');
+                      if (a && a.href && !a.href.startsWith('javascript:')) {
+                        e.preventDefault();
+                        let targetUrl = a.href;
+                        if (targetUrl.includes('duckduckgo.com/l/?uddg=')) {
+                          try {
+                            const urlParams = new URLSearchParams(targetUrl.split('?')[1]);
+                            if (urlParams.has('uddg')) {
+                              targetUrl = decodeURIComponent(urlParams.get('uddg'));
+                            }
+                          } catch(err) {}
+                        }
+                        window.location.href = '/proxy?url=' + encodeURIComponent(targetUrl);
+                      }
+                    });
+                    document.body.addEventListener('submit', (e) => {
+                      e.preventDefault();
+                      const form = e.target;
+                      const fd = new FormData(form);
+                      const params = new URLSearchParams();
+                      for (const [k, v] of fd.entries()) params.append(k, v);
+                      
+                      let action = form.action || window.location.href;
+                      const url = action + (action.includes('?') ? '&' : '?') + params.toString();
+                      window.location.href = '/proxy?url=' + encodeURIComponent(url);
+                    });
+                  });
+                </script>
+              `;
+              
+              // Rewrite meta refresh tags to also go through the proxy
+              body = body.replace(/<meta\s+http-equiv=["']refresh["']\s+content=["']([^;]+);\s*url=([^"']+)["']/gi, (match, p1, p2) => {
+                let parsedRedirect = p2;
+                if (parsedRedirect.startsWith('/')) {
+                   parsedRedirect = `${parsedUrl.protocol}//${parsedUrl.host}${parsedRedirect}`;
+                }
+                return `<meta http-equiv="refresh" content="${p1}; url=/proxy?url=${encodeURIComponent(parsedRedirect)}">`;
+              });
+              
               // Rewrite base tag or add one so relative paths resolve correctly
-              body = body.replace(/<head([^>]*)>/i, `<head$1><base href="${origin}/">`);
+              if (body.match(/<head([^>]*)>/i)) {
+                body = body.replace(/<head([^>]*)>/i, `<head$1><base href="${origin}/">${injectScript}`);
+              } else if (body.match(/<body([^>]*)>/i)) {
+                body = body.replace(/<body([^>]*)>/i, `<body$1><base href="${origin}/">${injectScript}`);
+              } else if (body.match(/<html([^>]*)>/i)) {
+                body = body.replace(/<html([^>]*)>/i, `<html$1><head><base href="${origin}/">${injectScript}</head>`);
+              } else {
+                body = `<base href="${origin}/">${injectScript}` + body;
+              }
               res.end(body);
             });
           } else {

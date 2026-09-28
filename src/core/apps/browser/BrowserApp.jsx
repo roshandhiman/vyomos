@@ -10,6 +10,7 @@ import {
   Lock,
   Bookmark,
   ArrowRight,
+  ArrowLeft,
 } from 'lucide-react';
 import './BrowserApp.css';
 
@@ -22,7 +23,7 @@ const BOOKMARKS = [
   { name: 'MDN', url: 'https://developer.mozilla.org' },
 ];
 
-const HOME_URL = 'https://www.google.com';
+const HOME_URL = 'https://html.duckduckgo.com/html/';
 
 const toProxyUrl = (raw) => {
   let target = raw.trim();
@@ -31,7 +32,7 @@ const toProxyUrl = (raw) => {
     if (target.includes('.') && !target.includes(' ')) {
       target = `https://${target}`;
     } else {
-      target = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
+      target = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(target)}`;
     }
   }
   return `/proxy?url=${encodeURIComponent(target)}`;
@@ -51,9 +52,17 @@ let tabIdCounter = 2;
 export default function BrowserApp({ initialUrl }) {
   const startProxy = toProxyUrl(initialUrl || HOME_URL);
   const startDisplay = initialUrl || HOME_URL;
+  console.log("Browser initialized with:", startProxy);
 
   const [tabs, setTabs] = useState([
-    { id: 1, title: 'New Tab', url: startProxy, display: startDisplay },
+    {
+      id: 1,
+      title: 'New Tab',
+      url: startProxy,
+      display: startDisplay,
+      history: [{ url: startProxy, display: startDisplay }],
+      historyIndex: 0,
+    },
   ]);
   const [activeTabId, setActiveTabId] = useState(1);
   const [addressInput, setAddressInput] = useState(startDisplay);
@@ -67,20 +76,58 @@ export default function BrowserApp({ initialUrl }) {
     const proxyUrl = toProxyUrl(display);
 
     setTabs((prev) =>
-      prev.map((t) =>
-        t.id === activeTabId
-          ? {
-              ...t,
-              url: proxyUrl,
-              display,
-              title: display.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] || 'Web Page',
-            }
-          : t
-      )
+      prev.map((t) => {
+        if (t.id === activeTabId) {
+          // Truncate future history if we navigate while in the past
+          const newHistory = t.history.slice(0, t.historyIndex + 1);
+          newHistory.push({ url: proxyUrl, display });
+          return {
+            ...t,
+            url: proxyUrl,
+            display,
+            title: display.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] || 'Web Page',
+            history: newHistory,
+            historyIndex: newHistory.length - 1,
+          };
+        }
+        return t;
+      })
     );
     setAddressInput(display);
     setLoading(true);
     setIframeKey((k) => k + 1);
+  };
+
+  const handleGoBack = () => {
+    setTabs((prev) =>
+      prev.map((t) => {
+        if (t.id === activeTabId && t.historyIndex > 0) {
+          const newIndex = t.historyIndex - 1;
+          const target = t.history[newIndex];
+          setAddressInput(target.display);
+          setLoading(true);
+          setIframeKey((k) => k + 1);
+          return { ...t, url: target.url, display: target.display, historyIndex: newIndex };
+        }
+        return t;
+      })
+    );
+  };
+
+  const handleGoForward = () => {
+    setTabs((prev) =>
+      prev.map((t) => {
+        if (t.id === activeTabId && t.historyIndex < t.history.length - 1) {
+          const newIndex = t.historyIndex + 1;
+          const target = t.history[newIndex];
+          setAddressInput(target.display);
+          setLoading(true);
+          setIframeKey((k) => k + 1);
+          return { ...t, url: target.url, display: target.display, historyIndex: newIndex };
+        }
+        return t;
+      })
+    );
   };
 
   const handleKeyDown = (e) => {
@@ -89,7 +136,18 @@ export default function BrowserApp({ initialUrl }) {
 
   const handleNewTab = () => {
     const id = tabIdCounter++;
-    setTabs([...tabs, { id, title: 'New Tab', url: toProxyUrl(HOME_URL), display: HOME_URL }]);
+    const startProxy = toProxyUrl(HOME_URL);
+    setTabs([
+      ...tabs,
+      {
+        id,
+        title: 'New Tab',
+        url: startProxy,
+        display: HOME_URL,
+        history: [{ url: startProxy, display: HOME_URL }],
+        historyIndex: 0,
+      },
+    ]);
     setActiveTabId(id);
     setAddressInput(HOME_URL);
     setLoading(true);
@@ -142,6 +200,24 @@ export default function BrowserApp({ initialUrl }) {
         <div className="browser-nav-btns">
           <button
             className="browser-tool-btn"
+            onClick={handleGoBack}
+            disabled={activeTab.historyIndex === 0}
+            style={{ opacity: activeTab.historyIndex === 0 ? 0.3 : 1 }}
+            title="Go Back"
+          >
+            <ArrowLeft size={13} />
+          </button>
+          <button
+            className="browser-tool-btn"
+            onClick={handleGoForward}
+            disabled={activeTab.historyIndex === activeTab.history.length - 1}
+            style={{ opacity: activeTab.historyIndex === activeTab.history.length - 1 ? 0.3 : 1 }}
+            title="Go Forward"
+          >
+            <ArrowRight size={13} />
+          </button>
+          <button
+            className="browser-tool-btn"
             onClick={() => { setLoading(true); setIframeKey((k) => k + 1); }}
             title="Reload"
           >
@@ -164,7 +240,7 @@ export default function BrowserApp({ initialUrl }) {
             value={addressInput}
             onChange={(e) => setAddressInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search Google or enter address..."
+            placeholder="Search DuckDuckGo or enter address..."
             onFocus={(e) => e.target.select()}
           />
           <button className="browser-tool-btn" onClick={() => navigateTo(addressInput)}>
@@ -209,6 +285,7 @@ export default function BrowserApp({ initialUrl }) {
           src={activeTab.url}
           title={activeTab.title}
           className="browser-iframe"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
           onLoad={() => setLoading(false)}
           onError={() => setLoading(false)}
         />

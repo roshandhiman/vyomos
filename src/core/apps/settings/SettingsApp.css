@@ -536,6 +536,7 @@ input:checked + .macos-slider::before {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%);
+  z-index: 1;
 }
 
 .wallpaper-banner-text {
