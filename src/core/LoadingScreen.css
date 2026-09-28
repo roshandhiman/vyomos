@@ -1,0 +1,200 @@
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #020408;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.loading-screen--fade-out {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+/* Animated grid background */
+.loading-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 122, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 122, 255, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: gridPan 20s linear infinite;
+}
+
+@keyframes gridPan {
+  from { background-position: 0 0; }
+  to   { background-position: 48px 48px; }
+}
+
+/* Floating particles */
+.loading-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.loading-particle {
+  position: absolute;
+  bottom: -6px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.6);
+  animation: particleRise linear infinite;
+  box-shadow: 0 0 6px rgba(0, 122, 255, 0.8);
+}
+
+@keyframes particleRise {
+  0%   { transform: translateY(0) scale(1); opacity: 0.8; }
+  80%  { opacity: 0.4; }
+  100% { transform: translateY(-100vh) scale(0); opacity: 0; }
+}
+
+/* Main content */
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 10;
+  animation: contentFadeIn 0.6s ease-out;
+}
+
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo */
+.loading-logo {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.loading-logo-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #007AFF;
+  border-right-color: rgba(0, 122, 255, 0.3);
+  animation: spin 1.4s linear infinite;
+}
+
+.loading-logo-ring--2 {
+  inset: 10px;
+  border-top-color: #38BDF8;
+  border-right-color: rgba(56, 189, 248, 0.3);
+  animation: spin 2s linear infinite reverse;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-logo-core {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #007AFF, #5856D6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -1px;
+  box-shadow: 0 0 24px rgba(0, 122, 255, 0.5);
+}
+
+/* OS name */
+.loading-os-name {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.loading-user {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Terminal log */
+.loading-terminal {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 16px;
+  width: 340px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loading-terminal-prompt {
+  color: #007AFF;
+  flex-shrink: 0;
+}
+
+.loading-terminal-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loading-terminal-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 1px;
+  animation: blink 0.9s step-end infinite;
+  flex-shrink: 0;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Progress bar */
+.loading-bar-track {
+  width: 340px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007AFF, #38BDF8);
+  border-radius: 4px;
+  transition: width 0.25s ease;
+  box-shadow: 0 0 10px rgba(0, 122, 255, 0.7);
+}
+
+.loading-percent {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-variant-numeric: tabular-nums;
+}

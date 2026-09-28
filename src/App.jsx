@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Desktop from './core/Desktop';
 import SetupWizard from './core/SetupWizard';
+import LoadingScreen from './core/LoadingScreen';
 import { useFsStore } from './core/store/fs';
 import { useSettingsStore } from './core/store/settings';
 
 export default function App() {
+  const [loading, setLoading] = useState(true);
   const isFirstTime = useSettingsStore((state) => state.isFirstTime);
   const initFs = useFsStore((state) => state.initFs);
   const themeMode = useSettingsStore((state) => state.themeMode);
@@ -56,8 +58,10 @@ export default function App() {
 
   return (
     <>
+      {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
       <Desktop />
-      {isFirstTime && <SetupWizard />}
+      {isFirstTime && !loading && <SetupWizard />}
     </>
   );
 }
+
