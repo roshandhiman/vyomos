@@ -7,8 +7,6 @@
 [![Live Demo](https://img.shields.io/badge/Live-Demo-007AFF?style=for-the-badge&logo=vercel&logoColor=white)](https://vyom-os-woad.vercel.app)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-
 </div>
 
 ---
