@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Folder, FileText, FileCode, Image as ImageIcon, File as FileIcon } from 'lucide-react';
+import { FcFolder } from 'react-icons/fc';
 import { useFsStore, vfs } from './store/fs';
 import { useWindowsStore } from './store/windows';
 import { APP_REGISTRY } from './apps/registry';
@@ -9,7 +10,7 @@ const DESKTOP_PATH = '/home/user/Desktop';
 
 const getDesktopIcon = (fileName, isFolder) => {
   if (isFolder) {
-    return <Folder size={36} color="#FBBF24" fill="#FBBF24" fillOpacity={0.25} />;
+    return <FcFolder size={36} />;
   }
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {

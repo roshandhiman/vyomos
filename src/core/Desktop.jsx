@@ -41,8 +41,8 @@ export default function Desktop() {
   const [contextMenu, setContextMenu] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
 
-  const activeWallpaperPreset = useMemo(() => {
-    return WALLPAPER_PRESETS.find((p) => p.id === wallpaper) || WALLPAPER_PRESETS[0];
+  const activeWallpaper = useMemo(() => {
+    return WALLPAPER_PRESETS.find((p) => p.id === wallpaper);
   }, [wallpaper]);
 
   const showDesktopToast = useCallback((msg) => {
@@ -169,11 +169,11 @@ export default function Desktop() {
       enabled={isGlowActive}
       className="desktop-shell"
       style={{
-        backgroundImage: activeWallpaperPreset?.url ? `url("${activeWallpaperPreset.url}")` : undefined,
+        backgroundImage: activeWallpaper?.url ? `url("${activeWallpaper.url}")` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: '#0B0813',
+        backgroundColor: 'var(--bg-desktop)',
       }}
     >
       <div className="desktop-content-layer">

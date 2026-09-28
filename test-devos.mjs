@@ -123,12 +123,14 @@ async function runTests() {
 
   console.log('\n--- 3. Testing Settings Store ---');
   const setStore = useSettingsStore.getState();
-  assert(WALLPAPER_PRESETS.length === 4, '4 Wallpaper presets available');
+  assert(WALLPAPER_PRESETS.length === 11, '11 Wallpaper presets (incl. Solid Dark)');
   assert(ACCENT_PRESETS.length === 4, '4 Accent color presets available');
 
   // Test wallpaper switch
-  setStore.setWallpaper('aurora');
-  assert(useSettingsStore.getState().wallpaper === 'aurora', 'Wallpaper set to aurora');
+  setStore.setWallpaper('wlp7');
+  assert(useSettingsStore.getState().wallpaper === 'wlp7', 'Wallpaper set to wlp7');
+  setStore.setWallpaper('solid-dark');
+  assert(useSettingsStore.getState().wallpaper === 'solid-dark', 'Wallpaper back to solid-dark');
 
   // Test accent switch
   setStore.setAccent('rose-pink');

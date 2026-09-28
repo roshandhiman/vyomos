@@ -23,6 +23,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useFsStore, vfs, normalizePath, splitPath } from '../../store/fs';
+import { FcFolder } from 'react-icons/fc';
 import './FilesApp.css';
 
 const QUICK_LINKS = [
@@ -35,7 +36,7 @@ const QUICK_LINKS = [
 ];
 
 const getFileIcon = (fileName, isFolder) => {
-  if (isFolder) return <Folder size={32} color="#FBBF24" fill="#FBBF24" fillOpacity={0.2} />;
+  if (isFolder) return <FcFolder size={32} />;
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
     case 'js':
@@ -62,7 +63,7 @@ const getFileIcon = (fileName, isFolder) => {
 };
 
 const getSmallFileIcon = (fileName, isFolder) => {
-  if (isFolder) return <Folder size={16} color="#FBBF24" />;
+  if (isFolder) return <FcFolder size={16} />;
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
     case 'js':

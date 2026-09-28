@@ -23,7 +23,7 @@
 }
 
 .window-frame--focused {
-  border-color: var(--border-accent);
+  border-color: var(--border-medium);
   box-shadow: var(--shadow-window-focused);
 }
 

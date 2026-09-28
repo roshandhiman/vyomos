@@ -20,6 +20,7 @@ export const ACCENT_PRESETS = [
 ];
 
 export const WALLPAPER_PRESETS = [
+  { id: 'solid-dark', name: 'Solid Dark', url: null },
   { id: 'wlp1', name: 'Nebula', url: new URL('/src/wlp/1.png', import.meta.url).href },
   { id: 'wlp2', name: 'Aurora', url: new URL('/src/wlp/2.png', import.meta.url).href },
   { id: 'wlp3', name: 'Cosmic', url: new URL('/src/wlp/3.png', import.meta.url).href },
@@ -38,7 +39,7 @@ export const useSettingsStore = create(
       accentId: 'cyan-violet',
       accentPrimary: '#67E8F9',
       accentSecondary: '#A78BFA',
-      wallpaper: 'wlp7',
+      wallpaper: 'solid-dark',
       cursorGlow: false,
       dockMagnification: true,
       animations: true,
@@ -124,7 +125,7 @@ export const useSettingsStore = create(
       },
     }),
     {
-      name: 'devos-settings-v2',
+      name: 'devos-settings-v3',
       onRehydrateStorage: () => (state) => {
         if (!state || typeof document === 'undefined') return;
         // apply restored values

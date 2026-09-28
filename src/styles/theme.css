@@ -2,7 +2,6 @@
   /* Accents */
   --accent-primary: #67E8F9;
   --accent-secondary: #A78BFA;
-  --accent-gradient: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   --accent-glow: rgba(103, 232, 249, 0.25);
 
   /* Backgrounds */
@@ -32,30 +31,12 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-window: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border-subtle);
-  --shadow-window-focused: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-accent), 0 0 20px rgba(103, 232, 249, 0.12);
+  --shadow-window-focused: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-medium);
 
   /* Dimensions */
   --topbar-height: 30px;
   --dock-height: 68px;
 
-  /* Wallpapers (CSS Gradients) */
-  --wallpaper-cosmic: radial-gradient(circle at 15% 20%, rgba(103, 232, 249, 0.18) 0%, transparent 45%),
-                      radial-gradient(circle at 85% 75%, rgba(167, 139, 250, 0.22) 0%, transparent 50%),
-                      radial-gradient(circle at 50% 50%, rgba(30, 20, 50, 0.6) 0%, transparent 70%),
-                      linear-gradient(145deg, #090611 0%, #110B22 40%, #07050E 100%);
-
-  --wallpaper-aurora: radial-gradient(circle at 75% 25%, rgba(52, 211, 153, 0.18) 0%, transparent 50%),
-                      radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.22) 0%, transparent 50%),
-                      linear-gradient(155deg, #041214 0%, #081B1F 45%, #02090B 100%);
-
-  --wallpaper-midnight: radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.12) 0%, transparent 60%),
-                        radial-gradient(circle at 80% 90%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
-                        linear-gradient(180deg, #0F172A 0%, #090D16 100%);
-
-  --wallpaper-cyberpunk: radial-gradient(circle at 80% 15%, rgba(244, 63, 94, 0.22) 0%, transparent 45%),
-                         radial-gradient(circle at 20% 85%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
-                         linear-gradient(135deg, #13071A 0%, #1F0D2E 50%, #0C0412 100%);
-
-  /* Active wallpaper placeholder (overridden by state) */
-  --active-wallpaper: var(--wallpaper-cosmic);
+  /* Desktop background (solid dark, no gradients) */
+  --bg-desktop: #0B0813;
 }

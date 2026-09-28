@@ -9,8 +9,6 @@ import {
   Zap,
   Monitor,
   Sparkles,
-  Layers,
-  Activity,
   Cpu,
 } from 'lucide-react';
 import './SettingsApp.css';
@@ -58,19 +56,22 @@ export default function SettingsApp() {
       <div className="settings-section">
         <h3 className="settings-section-title">
           <Monitor size={16} />
-          Wallpaper Presets
+          Wallpaper
         </h3>
         <div className="wallpaper-grid">
           {WALLPAPER_PRESETS.map((p) => (
             <div
               key={p.id}
               className={`wallpaper-card ${wallpaper === p.id ? 'wallpaper-card--active' : ''}`}
-              style={{
-                backgroundImage: `url("${p.url}")`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundColor: '#191524',
-              }}
+              style={
+                p.url
+                  ? {
+                    backgroundImage: `url("${p.url}")`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                  : { backgroundColor: 'var(--bg-desktop)' }
+              }
               onClick={() => setWallpaper(p.id)}
             >
               <span className="wallpaper-card-name">{p.name}</span>
