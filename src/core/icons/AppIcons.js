@@ -303,3 +303,112 @@ export const MacDocImageIcon = ({ size = 36 }) =>
     e('circle', { cx: 11, cy: 18, r: 2, fill: '#FBBF24' }),
     e('polygon', { points: '7,26 13,19 18,24 21,21 24,26', fill: '#38BDF8' })
   );
+
+// 7. Camera Icon (macOS Camera / Photo Booth)
+export const CameraIcon = ({ size = 48 }) =>
+  e(
+    IconContainer,
+    { size, bgGradient: 'linear-gradient(145deg, #475569 0%, #1E293B 50%, #0F172A 100%)' },
+    e(
+      'svg',
+      { width: size * 0.72, height: size * 0.72, viewBox: '0 0 36 36', fill: 'none' },
+      // Camera body
+      e('rect', { x: 4, y: 9, width: 28, height: 20, rx: 5, fill: '#1E293B', stroke: '#64748B', strokeWidth: 1 }),
+      e('path', { d: 'M12 9L14 6H22L24 9H12Z', fill: '#334155', stroke: '#64748B', strokeWidth: 0.8 }),
+      // Flash
+      e('circle', { cx: 27, cy: 13, r: 1.5, fill: '#F59E0B' }),
+      // Lens outer ring
+      e('circle', { cx: 18, cy: 19, r: 7.5, fill: '#090D16', stroke: '#94A3B8', strokeWidth: 1.5 }),
+      e('circle', { cx: 18, cy: 19, r: 5.5, fill: '#0F172A', stroke: '#38BDF8', strokeWidth: 1 }),
+      // Glass reflection
+      e('circle', { cx: 18, cy: 19, r: 3, fill: '#0284C7' }),
+      e('circle', { cx: 16.5, cy: 17.5, r: 1.2, fill: '#FFFFFF', opacity: 0.9 })
+    )
+  );
+
+// 8. Photos / Albums Icon (macOS Photos multi-colored bloom)
+export const PhotosIcon = ({ size = 48 }) =>
+  e(
+    IconContainer,
+    { size, bgGradient: 'linear-gradient(145deg, #FFFFFF 0%, #F1F5F9 100%)' },
+    e(
+      'svg',
+      { width: size * 0.74, height: size * 0.74, viewBox: '0 0 36 36', fill: 'none' },
+      // 8 colored petals forming the classic flower
+      e('ellipse', { cx: 18, cy: 11, rx: 3.2, ry: 6, fill: '#EF4444', opacity: 0.88 }),
+      e('ellipse', { cx: 23, cy: 13, rx: 3.2, ry: 6, fill: '#F97316', transform: 'rotate(45 23 13)', opacity: 0.88 }),
+      e('ellipse', { cx: 25, cy: 18, rx: 6, ry: 3.2, fill: '#FBBF24', opacity: 0.88 }),
+      e('ellipse', { cx: 23, cy: 23, rx: 3.2, ry: 6, fill: '#10B981', transform: 'rotate(-45 23 23)', opacity: 0.88 }),
+      e('ellipse', { cx: 18, cy: 25, rx: 3.2, ry: 6, fill: '#06B6D4', opacity: 0.88 }),
+      e('ellipse', { cx: 13, cy: 23, rx: 3.2, ry: 6, fill: '#3B82F6', transform: 'rotate(45 13 23)', opacity: 0.88 }),
+      e('ellipse', { cx: 11, cy: 18, rx: 6, ry: 3.2, fill: '#8B5CF6', opacity: 0.88 }),
+      e('ellipse', { cx: 13, cy: 13, rx: 3.2, ry: 6, fill: '#EC4899', transform: 'rotate(-45 13 13)', opacity: 0.88 }),
+      // Center ring
+      e('circle', { cx: 18, cy: 18, r: 2.8, fill: '#FFFFFF' })
+    )
+  );
+
+// 9. Weather Icon (macOS Weather azure sky, sun & cloud)
+export const WeatherIcon = ({ size = 48 }) =>
+  e(
+    IconContainer,
+    { size, bgGradient: 'linear-gradient(145deg, #38BDF8 0%, #0284C7 50%, #0369A1 100%)' },
+    e(
+      'svg',
+      { width: size * 0.72, height: size * 0.72, viewBox: '0 0 36 36', fill: 'none' },
+      // Sun
+      e('circle', { cx: 23, cy: 14, r: 6.5, fill: '#FBBF24' }),
+      // Cloud
+      e('path', {
+        d: 'M11 25C8.79 25 7 23.21 7 21C7 19.04 8.41 17.41 10.28 17.07C10.74 13.67 13.62 11 17.1 11C20.08 11 22.62 12.96 23.47 15.68C23.96 15.47 24.51 15.35 25.08 15.35C27.24 15.35 29 17.11 29 19.27C29 21.36 27.36 23.07 25.3 23.18L11 25Z',
+        fill: '#FFFFFF',
+        style: { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))' },
+      })
+    )
+  );
+
+// 10. Clock Icon (macOS Clock face)
+export const ClockIcon = ({ size = 48 }) =>
+  e(
+    IconContainer,
+    { size, bgGradient: 'linear-gradient(145deg, #1E1E24 0%, #0A0A0C 100%)' },
+    e(
+      'svg',
+      { width: size * 0.76, height: size * 0.76, viewBox: '0 0 36 36', fill: 'none' },
+      e('circle', { cx: 18, cy: 18, r: 15, fill: '#18181B', stroke: '#3F3F46', strokeWidth: 1.2 }),
+      // Hour markers
+      e('line', { x1: 18, y1: 5.5, x2: 18, y2: 7.5, stroke: '#F4F4F5', strokeWidth: 1.5, strokeLinecap: 'round' }),
+      e('line', { x1: 18, y1: 28.5, x2: 18, y2: 30.5, stroke: '#F4F4F5', strokeWidth: 1.5, strokeLinecap: 'round' }),
+      e('line', { x1: 5.5, y1: 18, x2: 7.5, y2: 18, stroke: '#F4F4F5', strokeWidth: 1.5, strokeLinecap: 'round' }),
+      e('line', { x1: 28.5, y1: 18, x2: 30.5, y2: 18, stroke: '#F4F4F5', strokeWidth: 1.5, strokeLinecap: 'round' }),
+      // Hour hand (pointing to 10)
+      e('line', { x1: 18, y1: 18, x2: 12, y2: 12.5, stroke: '#F4F4F5', strokeWidth: 2, strokeLinecap: 'round' }),
+      // Minute hand (pointing to 2)
+      e('line', { x1: 18, y1: 18, x2: 24, y2: 11, stroke: '#F4F4F5', strokeWidth: 1.75, strokeLinecap: 'round' }),
+      // Second hand (orange)
+      e('line', { x1: 18, y1: 21, x2: 18, y2: 8, stroke: '#F97316', strokeWidth: 1, strokeLinecap: 'round' }),
+      e('circle', { cx: 18, cy: 18, r: 1.75, fill: '#F97316' })
+    )
+  );
+
+// 11. Launchpad Icon (macOS Launchpad 9-app grid)
+export const LaunchpadIcon = ({ size = 48 }) =>
+  e(
+    IconContainer,
+    { size, bgGradient: 'linear-gradient(145deg, #334155 0%, #1E293B 50%, #0F172A 100%)' },
+    e(
+      'svg',
+      { width: size * 0.65, height: size * 0.65, viewBox: '0 0 32 32', fill: 'none' },
+      // 3x3 rounded squircle grid
+      e('rect', { x: 5, y: 5, width: 6, height: 6, rx: 1.5, fill: '#38BDF8' }),
+      e('rect', { x: 13, y: 5, width: 6, height: 6, rx: 1.5, fill: '#818CF8' }),
+      e('rect', { x: 21, y: 5, width: 6, height: 6, rx: 1.5, fill: '#F43F5E' }),
+      e('rect', { x: 5, y: 13, width: 6, height: 6, rx: 1.5, fill: '#34D399' }),
+      e('rect', { x: 13, y: 13, width: 6, height: 6, rx: 1.5, fill: '#FBBF24' }),
+      e('rect', { x: 21, y: 13, width: 6, height: 6, rx: 1.5, fill: '#A855F7' }),
+      e('rect', { x: 5, y: 21, width: 6, height: 6, rx: 1.5, fill: '#FB923C' }),
+      e('rect', { x: 13, y: 21, width: 6, height: 6, rx: 1.5, fill: '#E2E8F0' }),
+      e('rect', { x: 21, y: 21, width: 6, height: 6, rx: 1.5, fill: '#06B6D4' })
+    )
+  );
+

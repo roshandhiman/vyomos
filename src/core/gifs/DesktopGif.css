@@ -1,0 +1,103 @@
+/* ==================== DESKTOP GIF ==================== */
+.desktop-gif {
+  position: absolute;
+  user-select: none;
+  cursor: grab;
+  overflow: visible;
+}
+
+.desktop-gif:active {
+  cursor: grabbing;
+}
+
+/* The animated GIF image */
+.desktop-gif-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* Resize handle — bottom-right corner */
+.desktop-gif-resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  cursor: se-resize;
+  z-index: 2;
+  /* Visual indicator: three dots pattern like macOS resize corner */
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.5) 40%,
+    rgba(255, 255, 255, 0.5) 48%,
+    transparent 48%,
+    transparent 58%,
+    rgba(255, 255, 255, 0.5) 58%,
+    rgba(255, 255, 255, 0.5) 66%,
+    transparent 66%,
+    transparent 76%,
+    rgba(255, 255, 255, 0.5) 76%,
+    rgba(255, 255, 255, 0.5) 84%,
+    transparent 84%
+  );
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  border-bottom-right-radius: 10px;
+}
+
+.desktop-gif:hover .desktop-gif-resize {
+  opacity: 1;
+}
+
+/* ==================== GIF CONTEXT MENU ==================== */
+.desktop-gif-menu {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(22, 22, 28, 0.96);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  min-width: 160px;
+  animation: gifMenuPop 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gifMenuPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.desktop-gif-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+}
+
+.desktop-gif-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.desktop-gif-menu-item--danger {
+  color: #ff6b6b;
+}
+
+.desktop-gif-menu-item--danger:hover {
+  background: rgba(255, 70, 70, 0.15);
+}

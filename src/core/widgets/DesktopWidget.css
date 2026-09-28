@@ -1,0 +1,87 @@
+/* ==================== DESKTOP WIDGET CARD ==================== */
+.desktop-widget-wrapper {
+  position: absolute;
+  width: 290px;
+  border-radius: 20px;
+  background-color: var(--bg-surface);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.15);
+  user-select: none;
+  z-index: 5;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.desktop-widget-wrapper:hover {
+  border-color: var(--border-focus);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+.desktop-widget-wrapper--dragging {
+  opacity: 0.92;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  z-index: 50 !important;
+  cursor: grabbing !important;
+}
+
+/* Header bar with drag handle and remove button */
+.desktop-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem 0.2rem 0.75rem;
+  cursor: grab;
+}
+
+.desktop-widget-wrapper--dragging .desktop-widget-header {
+  cursor: grabbing;
+}
+
+.desktop-widget-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.desktop-widget-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.desktop-widget-wrapper:hover .desktop-widget-remove-btn {
+  opacity: 1;
+}
+
+.desktop-widget-remove-btn:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+}
+
+/* Body content */
+.desktop-widget-body {
+  padding: 0.3rem 0.85rem 0.85rem 0.85rem;
+}
+
+/* Light theme overrides */
+[data-theme='light'] .desktop-widget-wrapper {
+  background-color: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05);
+}

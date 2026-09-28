@@ -3,182 +3,218 @@
   position: absolute;
   pointer-events: none;
   z-index: 1000;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.22s ease;
 }
 
-/* Bottom Position */
+/* ── Bottom ── */
 .dock-wrapper--bottom {
   bottom: 0;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
+  align-items: flex-end;
 }
-
 .dock-wrapper--bottom.dock-wrapper--hidden {
-  transform: translateY(calc(100% + 12px));
+  transform: translateY(calc(100% + 14px));
   opacity: 0;
 }
 
-/* Left Position */
+/* ── Left ── */
 .dock-wrapper--left {
   left: 0;
-  top: var(--topbar-height);
+  top: var(--topbar-height, 28px);
   bottom: 0;
   display: flex;
   align-items: center;
 }
-
 .dock-wrapper--left.dock-wrapper--hidden {
-  transform: translateX(calc(-100% - 12px));
+  transform: translateX(calc(-100% - 14px));
   opacity: 0;
 }
 
-/* Right Position */
+/* ── Right ── */
 .dock-wrapper--right {
   right: 0;
-  top: var(--topbar-height);
+  top: var(--topbar-height, 28px);
   bottom: 0;
   display: flex;
   align-items: center;
 }
-
 .dock-wrapper--right.dock-wrapper--hidden {
-  transform: translateX(calc(100% + 12px));
+  transform: translateX(calc(100% + 14px));
   opacity: 0;
 }
 
+/* ==================== OUTER / SHELF ==================== */
 .dock-outer {
-  margin: 0.5rem;
+  margin: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
 }
 
-/* ==================== MACBOOK DOCK SHELF ==================== */
+/* The pill — FIXED SIZE. Never grows or shrinks from magnification. */
 .dock-shelf {
   position: relative;
-  background-color: var(--bg-dock);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid var(--border-medium);
-  box-shadow: var(--shadow-dock);
+  /* Glass look */
+  background: var(--bg-dock, rgba(255, 255, 255, 0.14));
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid var(--border-medium, rgba(255, 255, 255, 0.2));
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   pointer-events: auto;
   user-select: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  /* overflow visible so magnified icons pop above the pill */
   overflow: visible;
+  /* flex-end so the row of icons sits at the bottom of the pill */
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .dock-shelf--left,
 .dock-shelf--right {
   align-items: center;
+  justify-content: center;
 }
 
 /* Style variants */
-.dock-shelf--glass {
-  background-color: var(--bg-dock);
-}
-
 .dock-shelf--dark {
-  background-color: rgba(10, 10, 12, 0.94);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(12, 12, 15, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
 }
-
 .dock-shelf--transparent {
-  background-color: rgba(0, 0, 0, 0.22);
+  background: rgba(0, 0, 0, 0.22);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* ==================== DOCK ITEM & ICONS ==================== */
-.dock-item-mac {
+/* ==================== DOCK ROW ==================== */
+/* The flex container that holds icon slots. Same dimensions as pill content. */
+.dock-row {
+  display: flex;
+  align-items: flex-end;   /* icons grow UPWARD from bottom */
+  justify-content: center;
+  gap: 0;
+  overflow: visible;
+}
+
+.dock-row--vertical {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== SLOT ==================== */
+/*
+ * Each slot is exactly baseItemSize × baseItemSize.
+ * It NEVER changes size — so the pill stays stable.
+ * The inner dock-icon-inner is what gets scaled.
+ */
+.dock-slot {
   position: relative;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: visible;
   flex-shrink: 0;
-  will-change: width, height;
 }
 
+.dock-slot--v {
+  align-items: center;
+}
+
+/* ==================== ICON INNER (scaled) ==================== */
+/*
+ * This wrapper receives transform: scale(N) from JS.
+ * transform-origin: bottom center — so the icon grows upward.
+ * It is display:flex so the actual icon content is centered inside.
+ * will-change: transform gives GPU compositing.
+ */
+.dock-icon-inner {
+  will-change: transform;
+  border-radius: 22%;
+  overflow: visible;
+}
+
+/* ==================== ACTUAL ICON ==================== */
 .dock-icon-mac {
+  border-radius: 22%;
+  overflow: visible;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
   transition: filter 0.15s ease;
 }
 
-/* Signature MacBook App Click Bounce */
-.dock-icon--bouncing {
-  animation: macDockBounce 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+.dock-slot:hover .dock-icon-mac {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
 }
 
-@keyframes macDockBounce {
-  0% {
-    transform: translateY(0);
-  }
-  35% {
-    transform: translateY(-16px);
-  }
-  65% {
-    transform: translateY(-4px);
-  }
-  85% {
-    transform: translateY(-8px);
-  }
-  100% {
-    transform: translateY(0);
-  }
+/* ==================== CLICK BOUNCE ==================== */
+@keyframes dockBounce {
+  0%   { translate: 0 0; }
+  25%  { translate: 0 -14px; }
+  55%  { translate: 0 -3px; }
+  75%  { translate: 0 -8px; }
+  100% { translate: 0 0; }
 }
 
-/* Tooltip Label */
+/* ==================== TOOLTIP ==================== */
 .dock-tooltip {
   position: absolute;
-  width: fit-content;
-  white-space: pre;
-  border-radius: 6px;
-  border: 1px solid var(--border-medium);
-  background-color: var(--bg-surface);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 0.25rem 0.65rem;
-  font-size: 0.74rem;
+  white-space: nowrap;
+  border-radius: 7px;
+  border: 1px solid var(--border-medium, rgba(255, 255, 255, 0.15));
+  background: var(--bg-surface, rgba(30, 30, 35, 0.88));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 3px 10px;
+  font-size: 0.72rem;
   font-weight: 500;
-  color: var(--text-main);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.01em;
+  color: var(--text-main, #fff);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
   pointer-events: none;
-  z-index: 100;
-}
-
-.dock-tooltip--bottom {
-  top: -2.35rem;
+  z-index: 9999;
+  /* centered horizontally relative to the slot */
   left: 50%;
   transform: translateX(-50%);
 }
 
+/* Bottom dock: tooltip goes above the icon */
+.dock-tooltip--bottom {
+  bottom: calc(100% + 10px);
+  top: auto;
+}
+
+/* Left/Right: tooltip goes to the opposite side */
 .dock-tooltip--left {
-  left: calc(100% + 14px);
+  left: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%);
 }
-
 .dock-tooltip--right {
-  right: calc(100% + 14px);
+  right: calc(100% + 12px);
+  left: auto;
   top: 50%;
   transform: translateY(-50%);
 }
 
-/* Running App Indicator Dot */
+/* ==================== RUNNING DOT ==================== */
 .dock-dot {
   position: absolute;
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background-color: var(--text-muted);
+  background: var(--text-muted, rgba(255, 255, 255, 0.55));
   pointer-events: none;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .dock-dot--bottom {
@@ -186,22 +222,20 @@
   left: 50%;
   transform: translateX(-50%);
 }
-
 .dock-dot--left {
-  left: -6px;
+  left: -7px;
   top: 50%;
   transform: translateY(-50%);
 }
-
 .dock-dot--right {
-  right: -6px;
+  right: -7px;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .dock-dot--active {
-  background-color: var(--accent-primary);
-  box-shadow: 0 0 6px var(--accent-primary);
+  background: var(--accent-primary, #3b82f6);
+  box-shadow: 0 0 5px var(--accent-primary, #3b82f6);
   width: 5px;
   height: 5px;
 }

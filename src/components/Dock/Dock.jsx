@@ -2,21 +2,21 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './Dock.css';
 
 /**
- * MacOS-authentic Dock magnification.
+ * Authentic macOS Dock — Proper Flex Layout + CSS Scale Magnification
  *
- * Key insight: macOS measures distance to the *fixed* icon center (as if no magnification),
- * then applies a gaussian / cosine curve. The icons expand *in place* — they do NOT push
- * neighbors by re-computing positions on every frame. Instead the outer pill just grows.
- *
- * This means each icon is absolutely positioned at its natural slot, then scaled with
- * `transform: scale()` from the correct origin. Neighbors get slightly scaled too via the
- * falloff curve. The total dock width is recomputed from the accumulated scaled widths.
+ * Icons live in a regular flexbox row (no absolute positioning).
+ * Each icon wrapper keeps its natural baseItemSize slot in the layout,
+ * and the inner icon is scaled via CSS transform: scale() from "bottom center".
+ * This means:
+ *   - The pill background NEVER moves or resizes
+ *   - Icons grow UPWARD from their bottom edge (authentic macOS feel)
+ *   - Magnified icons render ON TOP of neighbors via z-index (no collision)
  */
 export default function Dock({
   items = [],
   className = '',
-  baseItemSize = 52,
-  magnification = 72,
+  baseItemSize = 54,
+  magnification = 88,
   position = 'bottom',
   autoHide = false,
   showIndicators = true,
@@ -25,247 +25,279 @@ export default function Dock({
 }) {
   const isVertical = position === 'left' || position === 'right';
   const dockRef = useRef(null);
-  const rafRef = useRef(null);
-  const iconRefs = useRef([]);
+  const animFrameRef = useRef(null);
 
-  // Use a ref for mouseCoord so the single rAF loop always reads latest value
-  const mouseCoordRef = useRef(null);
+  // Mouse coordinate relative to the dock content area
+  const [mouseCoord, setMouseCoord] = useState(null);
+  // Per-icon scale (animated via lerp)
+  const [scales, setScales] = useState(() => items.map(() => 1));
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  // renderScales drives the JSX
-  const scalesRef = useRef(items.map(() => 1));
-  const [renderScales, setRenderScales] = useState(() => items.map(() => 1));
-  const [isNearEdge, setIsNearEdge] = useState(!autoHide);
+  const [isVisible, setIsVisible] = useState(!autoHide);
   const hideTimerRef = useRef(null);
-  // Track whether a hover tooltip should show
-  const [mouseVisible, setMouseVisible] = useState(false);
+  const lastMoveTime = useRef(0);
 
-  const gap = Math.max(6, Math.round(baseItemSize * 0.12));
-  const maxScale = magnification > baseItemSize ? magnification / baseItemSize : 1.0;
-
-  // Keep ref in sync with items length
+  // Sync scales array length when items change
   useEffect(() => {
-    const ones = items.map(() => 1);
-    scalesRef.current = ones;
-    setRenderScales(ones);
+    setScales(prev => {
+      const next = items.map((_, i) => prev[i] ?? 1);
+      return next;
+    });
   }, [items.length]);
 
-  // Compute target scales from current mouseCoord ref value
-  const computeTargetScales = useCallback(
+  // ── Magnification config ──────────────────────────────────────────────────
+  const minScale = 1.0;
+  const maxScale = Math.max(1.35, magnification / baseItemSize);
+  // How far (in icon-center units) the magnification wave reaches on each side
+  const waveRadius = baseItemSize * 2.2;
+
+  // Calculate target scale for each icon given current mouse coord
+  const getTargetScales = useCallback(
     (coord) => {
-      if (coord === null || maxScale <= 1.0) return items.map(() => 1);
-      const spread = baseItemSize * 2.5;
+      if (coord === null) return items.map(() => minScale);
+
       return items.map((_, i) => {
-        const naturalCenter = i * (baseItemSize + gap) + baseItemSize / 2;
-        const dist = Math.abs(naturalCenter - coord);
-        if (dist >= spread) return 1;
-        const t = (Math.cos((dist / spread) * Math.PI) + 1) / 2;
-        return 1 + t * (maxScale - 1);
+        // Natural center of this icon slot
+        const center = i * baseItemSize + baseItemSize / 2;
+        const dist = Math.abs(coord - center);
+
+        if (dist >= waveRadius) return minScale;
+
+        // Cosine falloff: 1 at dist=0, 0 at dist=waveRadius
+        const t = (Math.cos((dist / waveRadius) * Math.PI) + 1) / 2;
+        return minScale + t * (maxScale - minScale);
       });
     },
-    [items, baseItemSize, gap, maxScale]
+    [items, baseItemSize, waveRadius, maxScale, minScale]
   );
 
-  // Single persistent rAF loop — reads mouseCoordRef so it never has stale closure
+  // ── Animation loop (lerp toward target) ──────────────────────────────────
+  const targetScalesRef = useRef(items.map(() => 1));
+
   useEffect(() => {
-    let alive = true;
-    const loop = () => {
-      if (!alive) return;
-      const targets = computeTargetScales(mouseCoordRef.current);
-      let needsMore = false;
-      const next = scalesRef.current.map((cur, i) => {
-        const target = targets[i] ?? 1;
-        const diff = target - cur;
-        // Snap when close enough
-        if (Math.abs(diff) < 0.0008) {
-          if (target !== 1) needsMore = true; // still decaying toward 1
-          return target;
-        }
-        needsMore = true;
-        return cur + diff * 0.28;
-      });
-      scalesRef.current = next;
-      // Always update render scales when animating
-      const isHovering = mouseCoordRef.current !== null;
-      const settled = !needsMore;
-      setRenderScales([...next]);
-      if (isHovering || !settled) {
-        rafRef.current = requestAnimationFrame(loop);
-      }
-      // If settled and not hovering: loop stops; mouse-enter will restart it
-    };
-    rafRef.current = requestAnimationFrame(loop);
-    return () => {
-      alive = false;
-      cancelAnimationFrame(rafRef.current);
-    };
-  // Only re-create loop when the scale formula changes (items, sizes)
-  // NOT on every mouseCoord change — that's the whole point of the ref
-  }, [computeTargetScales]);
+    targetScalesRef.current = getTargetScales(mouseCoord);
+  }, [mouseCoord, getTargetScales]);
 
-  // Helper to (re)start the rAF loop after mouse-enter
-  const ensureLoopRunning = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    const loop = () => {
-      const targets = computeTargetScales(mouseCoordRef.current);
-      let needsMore = false;
-      const next = scalesRef.current.map((cur, i) => {
-        const target = targets[i] ?? 1;
-        const diff = target - cur;
-        if (Math.abs(diff) < 0.0008) return target;
-        needsMore = true;
-        return cur + diff * 0.28;
-      });
-      scalesRef.current = next;
-      setRenderScales([...next]);
-      const isHovering = mouseCoordRef.current !== null;
-      if (isHovering || needsMore) {
-        rafRef.current = requestAnimationFrame(loop);
-      }
-    };
-    rafRef.current = requestAnimationFrame(loop);
-  }, [computeTargetScales]);
+  const animate = useCallback(() => {
+    const lerpFactor = 0.22;
+    let dirty = false;
 
-  // Mouse tracking
+    setScales(prev => {
+      const next = prev.map((cur, i) => {
+        const tgt = targetScalesRef.current[i] ?? minScale;
+        const diff = tgt - cur;
+        if (Math.abs(diff) < 0.0008) return tgt;
+        dirty = true;
+        return cur + diff * lerpFactor;
+      });
+      return dirty ? next : prev;
+    });
+
+    animFrameRef.current = requestAnimationFrame(animate);
+  }, [minScale]);
+
+  useEffect(() => {
+    animFrameRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, [animate]);
+
+  // ── Mouse tracking ────────────────────────────────────────────────────────
   const handleMouseMove = useCallback(
     (e) => {
+      const now = performance.now();
+      if (now - lastMoveTime.current < 10) return;
+      lastMoveTime.current = now;
+
       if (!dockRef.current) return;
       const rect = dockRef.current.getBoundingClientRect();
-      const padding = Math.max(8, Math.round(baseItemSize * 0.14));
-      mouseCoordRef.current = isVertical
-        ? e.clientY - rect.top - padding
-        : e.clientX - rect.left - padding;
-      ensureLoopRunning();
+
+      if (isVertical) {
+        setMouseCoord(e.clientY - rect.top);
+      } else {
+        setMouseCoord(e.clientX - rect.left);
+      }
     },
-    [baseItemSize, isVertical, ensureLoopRunning]
+    [isVertical]
   );
 
   const handleMouseLeave = useCallback(() => {
-    mouseCoordRef.current = null;
+    setMouseCoord(null);
     setHoveredIndex(null);
-    setMouseVisible(false);
-    ensureLoopRunning(); // keep running so scales decay back to 1
     if (autoHide) {
-      hideTimerRef.current = setTimeout(() => setIsNearEdge(false), 400);
+      hideTimerRef.current = setTimeout(() => setIsVisible(false), 400);
     }
-  }, [autoHide, ensureLoopRunning]);
+  }, [autoHide]);
 
   const handleMouseEnter = useCallback(() => {
     clearTimeout(hideTimerRef.current);
-    setIsNearEdge(true);
-    setMouseVisible(true);
+    setIsVisible(true);
   }, []);
 
-  // Auto-hide edge detection
+  // ── Auto-hide edge detection ──────────────────────────────────────────────
   useEffect(() => {
-    if (!autoHide) { setIsNearEdge(true); return; }
+    if (!autoHide) {
+      setIsVisible(true);
+      return;
+    }
     const onMove = (e) => {
-      const t = 18;
+      const thr = 20;
       const near =
-        position === 'bottom' ? e.clientY >= window.innerHeight - t :
-        position === 'left'   ? e.clientX <= t :
-        /* right */             e.clientX >= window.innerWidth - t;
-      if (near) { clearTimeout(hideTimerRef.current); setIsNearEdge(true); }
+        position === 'bottom'
+          ? e.clientY >= window.innerHeight - thr
+          : position === 'left'
+          ? e.clientX <= thr
+          : e.clientX >= window.innerWidth - thr;
+      if (near) {
+        clearTimeout(hideTimerRef.current);
+        setIsVisible(true);
+      }
     };
     window.addEventListener('mousemove', onMove);
-    return () => { window.removeEventListener('mousemove', onMove); clearTimeout(hideTimerRef.current); };
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      clearTimeout(hideTimerRef.current);
+    };
   }, [autoHide, position]);
 
-  // Click bounce
-  const handleAppClick = (item, index) => {
-    const el = iconRefs.current[index];
+  // ── Click bounce ──────────────────────────────────────────────────────────
+  const iconWrapperRefs = useRef([]);
+
+  const handleClick = (item, index) => {
+    const el = iconWrapperRefs.current[index];
     if (el) {
-      el.classList.remove('dock-icon--bouncing');
-      void el.offsetWidth;
-      el.classList.add('dock-icon--bouncing');
-      setTimeout(() => el.classList.remove('dock-icon--bouncing'), 450);
+      el.animate(
+        [
+          { transform: 'translateY(0px)' },
+          { transform: 'translateY(-14px)' },
+          { transform: 'translateY(-3px)' },
+          { transform: 'translateY(-8px)' },
+          { transform: 'translateY(0px)' },
+        ],
+        { duration: 480, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+      );
     }
     item.onClick?.();
   };
 
-  // Layout
-  const padding = Math.max(8, Math.round(baseItemSize * 0.14));
-  const isHidden = autoHide && !isNearEdge;
+  // ── Dock sizing: fixed pill — never changes with magnification ────────────
+  const padding = Math.round(baseItemSize * 0.13);
+  const dockContentLength = items.length * baseItemSize;
+  const pillLength = dockContentLength + padding * 2;
+  const pillThickness = baseItemSize + padding * 2;
 
-  // Compute total dock length so the pill auto-sizes
-  const totalContentLength = renderScales.reduce(
-    (sum, s, i) => sum + baseItemSize * s + (i < items.length - 1 ? gap : 0),
-    0
-  );
+  const pillStyle = isVertical
+    ? { width: `${pillThickness}px`, height: `${pillLength}px` }
+    : { width: `${pillLength}px`, height: `${pillThickness}px` };
+
+  const isHidden = autoHide && !isVisible;
 
   return (
-    <div className={`dock-wrapper dock-wrapper--${position} ${isHidden ? 'dock-wrapper--hidden' : ''}`}>
+    <div
+      className={`dock-wrapper dock-wrapper--${position} ${isHidden ? 'dock-wrapper--hidden' : ''}`}
+    >
       <div className="dock-outer">
+        {/* The pill — fixed size, NEVER resizes */}
         <div
           ref={dockRef}
-          onMouseEnter={handleMouseEnter}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          onContextMenu={onContextMenu}
           className={`dock-shelf dock-shelf--${position} dock-shelf--${dockStyle} ${className}`}
           style={{
-            '--dock-padding': `${padding}px`,
-            borderRadius: `${Math.max(14, baseItemSize * 0.38)}px`,
+            ...pillStyle,
+            borderRadius: `${Math.round(baseItemSize * 0.36)}px`,
             padding: `${padding}px`,
-            // Grow the pill to contain scaled icons
-            ...(isVertical
-              ? { width: `${baseItemSize * Math.max(...renderScales) + padding * 2}px`, height: `${totalContentLength + padding * 2}px` }
-              : { height: `${baseItemSize * Math.max(...renderScales) + padding * 2}px`, width: `${totalContentLength + padding * 2}px` }),
+            overflow: 'visible',
+            boxSizing: 'content-box',
           }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onMouseEnter={handleMouseEnter}
+          onContextMenu={onContextMenu}
           role="toolbar"
           aria-label="Application dock"
         >
+          {/* Flex row of slots — each slot is always baseItemSize wide */}
           <div
-            className="dock-stage"
-            style={{
-              position: 'relative',
-              display: 'flex',
-              flexDirection: isVertical ? 'column' : 'row',
-              alignItems: isVertical ? 'flex-start' : 'flex-end',
-              gap: `${gap}px`,
-              width: isVertical ? `${baseItemSize}px` : '100%',
-              height: isVertical ? '100%' : `${baseItemSize}px`,
-            }}
+            className={`dock-row ${isVertical ? 'dock-row--vertical' : 'dock-row--horizontal'}`}
           >
             {items.map((item, index) => {
-              const scale = renderScales[index] ?? 1;
-              const scaledSize = Math.round(baseItemSize * scale);
-              const isHovered = hoveredIndex === index;
+              const scale = scales[index] ?? 1;
+              const isHov = hoveredIndex === index;
+              // z-index: hovered/magnified icon floats above neighbors
+              const zIndex = Math.round(scale * 40);
+
+              const scaleTransform = isVertical
+                ? `scale(${scale})`       // vertical: scale from center
+                : `scale(${scale})`;      // horizontal: scale from bottom (CSS transform-origin handles it)
 
               return (
                 <div
-                  key={item.id || index}
-                  ref={(el) => { iconRefs.current[index] = el; }}
-                  className="dock-item-mac"
+                  key={item.id ?? index}
+                  className={`dock-slot ${isVertical ? 'dock-slot--v' : 'dock-slot--h'}`}
                   style={{
-                    width: `${scaledSize}px`,
-                    height: `${scaledSize}px`,
-                    flexShrink: 0,
-                    position: 'relative',
-                    zIndex: Math.round(scale * 10),
-                    transition: 'none',
+                    width: isVertical ? `${baseItemSize}px` : `${baseItemSize}px`,
+                    height: isVertical ? `${baseItemSize}px` : `${baseItemSize}px`,
+                    zIndex,
+                    // overflow visible so magnified icon can bleed out
+                    overflow: 'visible',
                   }}
-                  title={item.label}
-                  onClick={() => handleAppClick(item, index)}
+                  onClick={() => handleClick(item, index)}
                   onMouseEnter={() => setHoveredIndex(index)}
                   onMouseLeave={() => setHoveredIndex(null)}
                 >
+                  {/* Inner wrapper: scaled from bottom-center, never affects layout */}
                   <div
-                    className="dock-icon-mac"
-                    style={{ width: `${scaledSize}px`, height: `${scaledSize}px` }}
+                    ref={el => { iconWrapperRefs.current[index] = el; }}
+                    className="dock-icon-inner"
+                    style={{
+                      transform: scaleTransform,
+                      transformOrigin: isVertical
+                        ? (position === 'left' ? 'center left' : 'center right')
+                        : 'bottom center',
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                    }}
                   >
-                    {React.isValidElement(item.icon)
-                      ? React.cloneElement(item.icon, { size: Math.round(scaledSize * 0.82) })
-                      : item.icon}
+                    {/* Icon */}
+                    <div
+                      className="dock-icon-mac"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {React.isValidElement(item.icon)
+                        ? React.cloneElement(item.icon, {
+                            size: Math.round(baseItemSize * 0.82),
+                          })
+                        : item.icon}
+                    </div>
+
+                    {/* Tooltip */}
+                    {isHov && mouseCoord !== null && (
+                      <div
+                        className={`dock-tooltip dock-tooltip--${position}`}
+                        style={{
+                          // Push tooltip above the magnified icon
+                          ...(position === 'bottom'
+                            ? { bottom: `calc(100% + 6px)`, top: 'auto' }
+                            : {}),
+                        }}
+                      >
+                        {item.label}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Tooltip */}
-                  {isHovered && mouseVisible && (
-                    <div className={`dock-tooltip dock-tooltip--${position}`}>{item.label}</div>
-                  )}
-
-                  {/* Running indicator */}
+                  {/* Running dot — outside the scaler so it stays at pill edge */}
                   {showIndicators && item.running && (
-                    <div className={`dock-dot dock-dot--${position} ${item.active ? 'dock-dot--active' : ''}`} />
+                    <div
+                      className={`dock-dot dock-dot--${position} ${item.active ? 'dock-dot--active' : ''}`}
+                    />
                   )}
                 </div>
               );

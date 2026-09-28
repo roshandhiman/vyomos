@@ -10,6 +10,13 @@ import { useWindowsStore } from './store/windows';
 import { useFsStore, vfs } from './store/fs';
 import { DOCK_APPS, APP_REGISTRY } from './apps/registry';
 import { useClipboardStore } from './store/clipboard';
+import { useWidgetsStore } from './store/widgets';
+import DesktopWidget from './widgets/DesktopWidget';
+import Launchpad from './apps/launcher/Launchpad';
+import { LaunchpadIcon } from './icons/AppIcons';
+import useGifsStore from './store/gifs';
+import DesktopGif from './gifs/DesktopGif';
+import GifPicker from './gifs/GifPicker';
 import {
   FolderPlus,
   Palette,
@@ -23,6 +30,8 @@ import {
   Play,
   Info,
   Settings,
+  LayoutGrid,
+  Film,
 } from 'lucide-react';
 import './Desktop.css';
 
@@ -59,9 +68,18 @@ export default function Desktop() {
   const pasteItem = useClipboardStore((state) => state.pasteItem);
   const duplicateItem = useClipboardStore((state) => state.duplicateItem);
 
+  const desktopWidgets = useWidgetsStore((state) => state.widgets);
+  const setWidgetsCenterOpen = useWidgetsStore((state) => state.setWidgetsCenterOpen);
+
   const [contextMenu, setContextMenu] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
   const [desktopClickCount, setDesktopClickCount] = useState(0);
+  const [launchpadOpen, setLaunchpadOpen] = useState(false);
+
+  // GIF system
+  const desktopGifs = useGifsStore((s) => s.gifs);
+  const addGif = useGifsStore((s) => s.addGif);
+  const [gifPickerState, setGifPickerState] = useState(null); // { x, y } or null
 
   const activeWallpaper = useMemo(() => {
     return WALLPAPER_PRESETS.find((p) => p.id === wallpaper);
@@ -77,10 +95,34 @@ export default function Desktop() {
   // Context menu on empty desktop
   const handleDesktopContextMenu = (e) => {
     e.preventDefault();
+    const cx = e.clientX;
+    const cy = e.clientY;
     setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
+      x: cx,
+      y: cy,
       items: [
+        {
+          label: 'Applications (Launchpad)...',
+          icon: LayoutGrid,
+          action: () => {
+            setLaunchpadOpen(true);
+          },
+        },
+        {
+          label: 'Add Widgets...',
+          icon: LayoutGrid,
+          action: () => {
+            setWidgetsCenterOpen(true);
+          },
+        },
+        {
+          label: 'Add GIF to Desktop...',
+          icon: Film,
+          action: () => {
+            setGifPickerState({ x: cx, y: cy });
+          },
+        },
+        { separator: true },
         {
           label: 'New Folder',
           icon: FolderPlus,
@@ -239,7 +281,8 @@ export default function Desktop() {
 
   // Prepare Dock Items with running and active state
   const dockItems = useMemo(() => {
-    return DOCK_APPS.map((app) => {
+    const list = [];
+    DOCK_APPS.forEach((app) => {
       const Icon = app.icon;
       const appWindows = windows.filter((w) => w.appId === app.id);
       const isRunning = appWindows.length > 0;
@@ -247,16 +290,29 @@ export default function Desktop() {
         (w) => w.id === focusedWindowId && !w.minimized
       );
 
-      return {
+      list.push({
         id: app.id,
         label: app.title,
         icon: <Icon size={dockSize} />,
         running: isRunning,
         active: isActive,
         onClick: () => handleDockClick(app.id, app),
-      };
+      });
+
+      // Insert Launchpad right after Files
+      if (app.id === 'files') {
+        list.push({
+          id: 'launchpad',
+          label: 'Launchpad',
+          icon: <LaunchpadIcon size={dockSize} />,
+          running: false,
+          active: launchpadOpen,
+          onClick: () => setLaunchpadOpen((p) => !p),
+        });
+      }
     });
-  }, [windows, focusedWindowId, handleDockClick, dockSize]);
+    return list;
+  }, [windows, focusedWindowId, handleDockClick, dockSize, launchpadOpen]);
 
   const isGlowActive = cursorGlow && !performanceMode;
   const isMagnificationActive = dockMagnification && !performanceMode;
@@ -302,6 +358,16 @@ export default function Desktop() {
           onDesktopClick={desktopClickCount}
         />
 
+        {/* Desktop Widgets Layer */}
+        {desktopWidgets.map((w) => (
+          <DesktopWidget key={w.id} widget={w} />
+        ))}
+
+        {/* Desktop GIFs Layer */}
+        {desktopGifs.map((g) => (
+          <DesktopGif key={g.id} gif={g} />
+        ))}
+
         {/* Window Manager Layer */}
         <WindowManager />
 
@@ -334,6 +400,18 @@ export default function Desktop() {
             <span>{toastMsg}</span>
           </div>
         )}
+
+        {/* Launchpad Fullscreen Overlay */}
+        <Launchpad isOpen={launchpadOpen} onClose={() => setLaunchpadOpen(false)} />
+
+        {/* GIF Picker Modal */}
+        <GifPicker
+          open={gifPickerState !== null}
+          dropX={gifPickerState?.x ?? 200}
+          dropY={gifPickerState?.y ?? 200}
+          onSelect={(src, x, y) => addGif(src, x, y)}
+          onClose={() => setGifPickerState(null)}
+        />
       </div>
     </GlowCursor>
   );

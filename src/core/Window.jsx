@@ -317,7 +317,14 @@ export default function Window({ windowData, isFocused }) {
           }
         >
           {AppComponent ? (
-            <AppComponent appId={appId} title={title} {...props} />
+            <AppComponent
+              appId={appId}
+              title={title}
+              minimized={minimized}
+              isFocused={isFocused}
+              onClose={() => closeWindow(id)}
+              {...props}
+            />
           ) : (
             <div style={{ padding: '2rem' }}>App not found</div>
           )}

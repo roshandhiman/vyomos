@@ -1,0 +1,219 @@
+.clock-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Tab Bar */
+.clock-tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  background-color: rgba(20, 20, 24, 0.45);
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.clock-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 0.35rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.clock-tab-btn:hover {
+  color: var(--text-main);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.clock-tab-btn--active {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  border-color: var(--border-medium);
+  font-weight: 600;
+}
+
+/* Content Area */
+.clock-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* World Clock Grid */
+.world-clock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.2rem;
+}
+
+.world-clock-card {
+  padding: 1.2rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-medium);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.world-clock-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.world-clock-city {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.world-clock-diff {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.world-clock-digi {
+  font-size: 1.6rem;
+  font-weight: 300;
+  margin-top: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stopwatch View */
+.stopwatch-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.stopwatch-display {
+  font-size: 4.5rem;
+  font-weight: 200;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  margin: 1.5rem 0;
+}
+
+.stopwatch-millis {
+  font-size: 2.5rem;
+  opacity: 0.6;
+}
+
+.stopwatch-controls {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stopwatch-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.stopwatch-btn:active {
+  transform: scale(0.94);
+}
+
+.stopwatch-btn--start {
+  background-color: rgba(52, 199, 89, 0.2);
+  border-color: #34C759;
+  color: #34C759;
+}
+
+.stopwatch-btn--stop {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+.stopwatch-btn--secondary {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-medium);
+  color: var(--text-main);
+}
+
+.stopwatch-laps-table {
+  width: 100%;
+  max-width: 440px;
+  border-top: 1px solid var(--border-medium);
+}
+
+.stopwatch-lap-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.85rem;
+}
+
+/* Timer View */
+.timer-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding-top: 2rem;
+}
+
+.timer-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timer-input-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.timer-num-input {
+  width: 70px;
+  height: 60px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  font-size: 1.8rem;
+  font-weight: 300;
+  text-align: center;
+  color: var(--text-main);
+  outline: none;
+}
+
+.timer-num-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.timer-num-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}

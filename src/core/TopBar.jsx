@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Terminal, Maximize2, Minimize2, Cpu, LayoutGrid } from 'lucide-react';
 import { useWindowsStore } from './store/windows';
+import { useWidgetsStore } from './store/widgets';
 import WidgetsCenter from './widgets/WidgetsCenter';
 import './TopBar.css';
 
 export default function TopBar() {
   const focusedWindowId = useWindowsStore((state) => state.focusedWindowId);
   const windows = useWindowsStore((state) => state.windows);
+  const widgetsOpen = useWidgetsStore((state) => state.widgetsCenterOpen);
+  const toggleWidgetsCenter = useWidgetsStore((state) => state.toggleWidgetsCenter);
+  const setWidgetsCenterOpen = useWidgetsStore((state) => state.setWidgetsCenterOpen);
 
   const focusedWindow = windows.find((w) => w.id === focusedWindowId && !w.minimized);
   const activeTitle = focusedWindow ? focusedWindow.title : 'Vyom OS';
@@ -14,7 +18,6 @@ export default function TopBar() {
   const [timeStr, setTimeStr] = useState('');
   const [dateTooltip, setDateTooltip] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [widgetsOpen, setWidgetsOpen] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -82,7 +85,7 @@ export default function TopBar() {
         <div className="topbar-right">
           <button
             className={`topbar-btn topbar-btn--widgets ${widgetsOpen ? 'topbar-btn--active' : ''}`}
-            onClick={() => setWidgetsOpen((p) => !p)}
+            onClick={toggleWidgetsCenter}
             title="Widgets"
             aria-label="Toggle Widgets Center"
           >
@@ -103,7 +106,7 @@ export default function TopBar() {
       </header>
 
       {widgetsOpen && (
-        <WidgetsCenter onClose={() => setWidgetsOpen(false)} />
+        <WidgetsCenter onClose={() => setWidgetsCenterOpen(false)} />
       )}
     </>
   );
