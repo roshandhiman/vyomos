@@ -6,7 +6,12 @@ import { useFsStore } from './core/store/fs';
 import { useSettingsStore } from './core/store/settings';
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !localStorage.getItem('vyom-booted'));
+
+  const handleLoadComplete = () => {
+    localStorage.setItem('vyom-booted', '1');
+    setLoading(false);
+  };
   const isFirstTime = useSettingsStore((state) => state.isFirstTime);
   const initFs = useFsStore((state) => state.initFs);
   const themeMode = useSettingsStore((state) => state.themeMode);
@@ -58,7 +63,7 @@ export default function App() {
 
   return (
     <>
-      {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
+      {loading && <LoadingScreen onComplete={handleLoadComplete} />}
       <Desktop />
       {isFirstTime && !loading && <SetupWizard />}
     </>
